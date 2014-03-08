@@ -10,6 +10,7 @@ import java.io.Serializable;
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.nio.ByteBuffer;
 import java.nio.channels.WritableByteChannel;
@@ -136,7 +137,7 @@ public class PurpleJrankOutput extends ObjectOutputStream implements ObjectOutpu
 		writeObject0(obj, true);
 	}
 	
-	protected void writeObject0(Object obj, boolean shared) throws IOException {
+	private void writeObject0(Object obj, boolean shared) throws IOException {
 		ensureOpen().setBlockMode(false);
 		
 		if(obj == null) {
@@ -155,6 +156,15 @@ public class PurpleJrankOutput extends ObjectOutputStream implements ObjectOutpu
 		
 		if(!wired.containsKey(obj))
 			wired.put(obj, wired.size());
+		
+		Method writeReplace = writeReplace(obj);
+		if(writeReplace != null) {
+			try {
+				obj = writeReplace.invoke(obj);
+			} catch(Exception ex) {
+				throw new IOException(ex);
+			}
+		}
 		
 		if(obj.getClass().isArray()) {
 			ensureCapacity(1).put(JrankConstants.ARRAY);
@@ -258,6 +268,24 @@ public class PurpleJrankOutput extends ObjectOutputStream implements ObjectOutpu
 			d.setParent(writeClassDesc(cls.getSuperclass()));
 		
 		return d;
+	}
+	
+	private Method writeReplace(Object obj) {
+		try {
+			Method m = obj.getClass().getMethod("writeReplace");
+			m.setAccessible(true);
+			return m;
+		} catch(NoSuchMethodException e) {}
+		Class<?> cls = obj.getClass();
+		while(cls != null) {
+			try {
+				Method m = cls.getDeclaredMethod("writeReplace");
+				m.setAccessible(true);
+				return m;
+			} catch(NoSuchMethodException e) {}
+			cls = cls.getSuperclass();
+		}
+		return null;
 	}
 	
 	@Override
@@ -365,7 +393,8 @@ public class PurpleJrankOutput extends ObjectOutputStream implements ObjectOutpu
 
 	@Override
 	public void reset() throws IOException {
-		// TODO Auto-generated method stub
-		throw new UnsupportedOperationException();
+		setBlockMode(false).ensureCapacity(1).put(JrankConstants.RESET);
+		wired.clear();
+		classdesc.clear();
 	}
 }
