@@ -6,19 +6,19 @@ import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.lang.reflect.Proxy;
 
-public class Jranklass {
+public class JrankClass {
 	private boolean proxy;
 	private String[] proxyInterfaceNames;
 	private byte flags;
 	private String name;
 	private String[] fieldNames;
 	private String[] fieldTypes;
-	private Jranklass parent;
+	private JrankClass parent;
 	
 	private Class<?> type;
 	private Field[] fields;
 	
-	public Jranklass(Class<?> cls) {
+	public JrankClass(Class<?> cls) {
 		this.type = cls;
 		
 		if(Proxy.isProxyClass(cls)) {
@@ -30,16 +30,16 @@ public class Jranklass {
 		} else {
 			flags = 0;
 			if(Enum.class.isAssignableFrom(cls))
-				flags = JrankableConstants.SC_WRITE_ENUM;
+				flags = JrankConstants.SC_WRITE_ENUM;
 			else if(Externalizable.class.isAssignableFrom(cls))
-				flags = JrankableConstants.SC_WRITE_EXTERNAL;
+				flags = JrankConstants.SC_WRITE_EXTERNAL;
 			else {
 				try {
 					cls.getDeclaredMethod("writeObject", ObjectOutputStream.class);
-					flags = JrankableConstants.SC_WRITE_OBJECT;
+					flags = JrankConstants.SC_WRITE_OBJECT;
 				} catch(NoSuchMethodException e) {
 					if(Serializable.class.isAssignableFrom(cls))
-						flags = JrankableConstants.SC_WRITE_FIELDS;
+						flags = JrankConstants.SC_WRITE_FIELDS;
 				}
 			}
 			name = cls.getName();
@@ -93,10 +93,10 @@ public class Jranklass {
 	public String[] getFieldTypes() {
 		return fieldTypes;
 	}
-	public Jranklass getParent() {
+	public JrankClass getParent() {
 		return parent;
 	}
-	void setParent(Jranklass parent) {
+	void setParent(JrankClass parent) {
 		this.parent = parent;
 	}
 
