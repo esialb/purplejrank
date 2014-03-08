@@ -157,7 +157,7 @@ public class PurpleJrankOutput extends ObjectOutputStream implements ObjectOutpu
 		if(!wired.containsKey(obj))
 			wired.put(obj, wired.size());
 		
-		Method writeReplace = writeReplace(obj);
+		Method writeReplace = findWriteReplace(obj);
 		if(writeReplace != null) {
 			try {
 				obj = writeReplace.invoke(obj);
@@ -270,7 +270,7 @@ public class PurpleJrankOutput extends ObjectOutputStream implements ObjectOutpu
 		return d;
 	}
 	
-	private Method writeReplace(Object obj) {
+	private Method findWriteReplace(Object obj) {
 		try {
 			Method m = obj.getClass().getMethod("writeReplace");
 			m.setAccessible(true);
