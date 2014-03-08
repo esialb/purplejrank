@@ -3,61 +3,60 @@ package org.purplejrank;
 import java.io.IOException;
 import java.io.ObjectOutput;
 import java.io.ObjectOutputStream.PutField;
+import java.util.HashMap;
+import java.util.Map;
 
 public class JrankPutFields extends PutField {
+	
+	private Map<String, Object> values = new HashMap<String, Object>();
+	
+	public Object get(String name) {
+		return values.get(name);
+	}
 
 	@Override
 	public void put(String name, boolean val) {
-		// TODO Auto-generated method stub
-
+		values.put(name, val);
 	}
 
 	@Override
 	public void put(String name, byte val) {
-		// TODO Auto-generated method stub
-
+		values.put(name, val);
 	}
 
 	@Override
 	public void put(String name, char val) {
-		// TODO Auto-generated method stub
-
+		values.put(name, val);
 	}
 
 	@Override
 	public void put(String name, short val) {
-		// TODO Auto-generated method stub
-
+		values.put(name, val);
 	}
 
 	@Override
 	public void put(String name, int val) {
-		// TODO Auto-generated method stub
-
+		values.put(name, val);
 	}
 
 	@Override
 	public void put(String name, long val) {
-		// TODO Auto-generated method stub
-
+		values.put(name, val);
 	}
 
 	@Override
 	public void put(String name, float val) {
-		// TODO Auto-generated method stub
-
+		values.put(name, val);
 	}
 
 	@Override
 	public void put(String name, double val) {
-		// TODO Auto-generated method stub
-
+		values.put(name, val);
 	}
 
 	@Override
 	public void put(String name, Object val) {
-		// TODO Auto-generated method stub
-
+		values.put(name, val);
 	}
 
 	@Override

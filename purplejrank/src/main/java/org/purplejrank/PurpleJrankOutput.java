@@ -210,8 +210,7 @@ public class PurpleJrankOutput extends ObjectOutputStream implements ObjectOutpu
 					}
 					setBlockMode(false).ensureCapacity(1).put(JrankConstants.WALL);
 				} else {
-					writeFields(t, obj);
-					setBlockMode(false).ensureCapacity(1).put(JrankConstants.WALL);
+					defaultWriteObject();
 				}
 				context.pollLast();
 				t = t.getParent();
@@ -220,28 +219,6 @@ public class PurpleJrankOutput extends ObjectOutputStream implements ObjectOutpu
 		
 	}
 	
-	private void writeFields(JrankClass t, Object obj) throws IOException {
-		setBlockMode(false).ensureCapacity(1).put(JrankConstants.FIELDS);
-		for(Field f : t.getFields()) {
-			Class<?> fc = f.getType();
-			try {
-				if(fc == byte.class) writeByte(f.getByte(obj));
-				else if(fc == char.class) writeChar(f.getChar(obj));
-				else if(fc == double.class) writeDouble(f.getDouble(obj));
-				else if(fc == float.class) writeFloat(f.getFloat(obj));
-				else if(fc == int.class) writeInt(f.getInt(obj));
-				else if(fc == long.class) writeLong(f.getLong(obj));
-				else if(fc == short.class) writeShort(f.getShort(obj));
-				else if(fc == boolean.class) writeBoolean(f.getBoolean(obj));
-				else writeObject(f.get(obj));
-			} catch(IOException ioe) {
-				throw ioe;
-			} catch(Exception e) {
-				throw new IOException(e);
-			}
-		}
-	}
-
 	private JrankClass writeClassDesc(Class<?> cls) throws IOException {
 		setBlockMode(false);
 		
@@ -338,25 +315,57 @@ public class PurpleJrankOutput extends ObjectOutputStream implements ObjectOutpu
 		JrankContext ctx = context.peekLast();
 		if(ctx == JrankContext.NO_CONTEXT)
 			throw new NotActiveException();
-		writeFields(ctx.getType(), ctx.getObject());
-		setBlockMode(false).ensureCapacity(1).put(JrankConstants.WALL);
+		putFields();
+		writeFields();
 	}
 
 	@Override
 	public PutField putFields() throws IOException {
-		// TODO Auto-generated method stub
-		return super.putFields();
+		JrankContext ctx = context.peekLast();
+		if(ctx == JrankContext.NO_CONTEXT)
+			throw new NotActiveException();
+		JrankPutFields pf = ctx.getPutFields();
+		try {
+			for(Field f : ctx.getType().getFields()) {
+				pf.put(f.getName(), f.get(ctx.getObject()));
+			}
+		} catch(Exception e) {
+			throw new IOException(e);
+		}
+		return pf;
 	}
 
 	@Override
 	public void writeFields() throws IOException {
-		// TODO Auto-generated method stub
-		super.writeFields();
+		JrankContext ctx = context.peekLast();
+		if(ctx == JrankContext.NO_CONTEXT)
+			throw new NotActiveException();
+		setBlockMode(false).ensureCapacity(1).put(JrankConstants.FIELDS);
+		for(Field f : ctx.getType().getFields()) {
+			Class<?> fc = f.getType();
+			Object val = ctx.getPutFields().get(f.getName());
+			try {
+				if(fc == byte.class) writeByte((Byte) val);
+				else if(fc == char.class) writeChar((Character) val);
+				else if(fc == double.class) writeDouble((Double) val);
+				else if(fc == float.class) writeFloat((Float) val);
+				else if(fc == int.class) writeInt((Integer) val);
+				else if(fc == long.class) writeLong((Long) val);
+				else if(fc == short.class) writeShort((Short) val);
+				else if(fc == boolean.class) writeBoolean((Boolean) val);
+				else writeObject0(val, true);
+			} catch(IOException ioe) {
+				throw ioe;
+			} catch(Exception e) {
+				throw new IOException(e);
+			}
+		}
+		setBlockMode(false).ensureCapacity(1).put(JrankConstants.WALL);
 	}
 
 	@Override
 	public void reset() throws IOException {
 		// TODO Auto-generated method stub
-		super.reset();
+		throw new UnsupportedOperationException();
 	}
 }
