@@ -271,11 +271,6 @@ public class PurpleJrankOutput extends ObjectOutputStream implements ObjectOutpu
 	}
 	
 	private Method findWriteReplace(Object obj) {
-		try {
-			Method m = obj.getClass().getMethod("writeReplace");
-			m.setAccessible(true);
-			return m;
-		} catch(NoSuchMethodException e) {}
 		Class<?> cls = obj.getClass();
 		while(cls != null) {
 			try {
