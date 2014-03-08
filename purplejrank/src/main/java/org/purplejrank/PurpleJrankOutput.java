@@ -1,6 +1,7 @@
 package org.purplejrank;
 
 import java.io.Externalizable;
+import java.io.Flushable;
 import java.io.IOException;
 import java.io.NotActiveException;
 import java.io.NotSerializableException;
@@ -135,6 +136,7 @@ public class PurpleJrankOutput extends ObjectOutputStream implements ObjectOutpu
 	@Override
 	protected void writeObjectOverride(Object obj) throws IOException {
 		writeObject0(obj, true);
+		flush();
 	}
 	
 	private void writeObject0(Object obj, boolean shared) throws IOException {
@@ -214,7 +216,9 @@ public class PurpleJrankOutput extends ObjectOutputStream implements ObjectOutpu
 				context.offerLast(new JrankContext(t, obj));
 				if(t.getFlags() == JrankConstants.SC_WRITE_OBJECT) {
 					try {
-						t.getType().getDeclaredMethod("writeObject", ObjectOutputStream.class).invoke(obj, this);
+						Method m = t.getType().getDeclaredMethod("writeObject", ObjectOutputStream.class);
+						m.setAccessible(true);
+						m.invoke(obj, this);
 					} catch(Exception e) {
 						throw new IOException(e);
 					}
@@ -317,6 +321,8 @@ public class PurpleJrankOutput extends ObjectOutputStream implements ObjectOutpu
 		}
 		out.write((ByteBuffer) buf.flip());
 		buf.clear();
+		if(out instanceof Flushable)
+			((Flushable) out).flush();
 	}
 
 	@Override

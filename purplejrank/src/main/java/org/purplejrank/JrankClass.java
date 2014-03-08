@@ -4,7 +4,9 @@ import java.io.Externalizable;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.lang.reflect.Proxy;
+import java.util.Arrays;
 
 public class JrankClass {
 	private boolean proxy;
@@ -47,10 +49,18 @@ public class JrankClass {
 			Field.setAccessible(fields, true);
 			fieldNames = new String[fields.length];
 			fieldTypes = new String[fields.length];
+			int fi = 0;
 			for(int i = 0; i < fields.length; i++) {
-				fieldNames[i] = fields[i].getName();
-				fieldTypes[i] = className(fields[i].getType());
+				if(Modifier.isStatic(fields[i].getModifiers()) || Modifier.isTransient(fields[i].getModifiers()))
+					continue;
+				fieldNames[fi] = fields[i].getName();
+				fieldTypes[fi] = className(fields[i].getType());
+				fields[fi] = fields[i];
+				fi++;
 			}
+			fieldNames = Arrays.copyOf(fieldNames, fi);
+			fieldTypes = Arrays.copyOf(fieldTypes, fi);
+			fields = Arrays.copyOf(fields, fi);
 		}
 	}
 	
