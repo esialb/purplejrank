@@ -1,6 +1,7 @@
 package org.purplejrank;
 
 public interface Jrankable {
+	// private static final long jerialVersionUID;
 	// private void writeObject(PurpleJrankOutput jrank) throws IOException;
 	// private void readObject(PurpleJrankInput jrank) throws IOException, ClassNotFoundException;
 	// private void readObjectNoData(PurpleJrankInput jrank) throws IOException, ClassNotFoundException;
