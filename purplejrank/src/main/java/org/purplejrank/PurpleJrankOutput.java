@@ -1,16 +1,25 @@
 package org.purplejrank;
 
+import java.io.Externalizable;
 import java.io.IOException;
+import java.io.NotActiveException;
+import java.io.NotSerializableException;
 import java.io.ObjectOutput;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
+import java.lang.reflect.Array;
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Proxy;
 import java.nio.ByteBuffer;
 import java.nio.channels.WritableByteChannel;
+import java.util.ArrayDeque;
 import java.util.Arrays;
+import java.util.Deque;
 import java.util.IdentityHashMap;
 import java.util.Map;
 
-public class PurpleJrankOutput implements ObjectOutput {
+public class PurpleJrankOutput extends ObjectOutputStream implements ObjectOutput {
 	private boolean isClosed = false;
 	private WritableByteChannel out;
 	private ByteBuffer buf = ByteBuffer.allocateDirect(JrankableConstants.MAX_BLOCK_SIZE);
@@ -18,6 +27,8 @@ public class PurpleJrankOutput implements ObjectOutput {
 	private ByteBuffer blockHeader = ByteBuffer.allocateDirect(5);
 	
 	private Map<Object, Integer> wired = new IdentityHashMap<Object, Integer>();
+	private Map<Class<?>, Jranklass> classdesc = new IdentityHashMap<Class<?>, Jranklass>();
+	private Deque<JrankingContext> context = new ArrayDeque<JrankingContext>(Arrays.asList(JrankingContext.NO_CONTEXT));
 	
 	public PurpleJrankOutput(WritableByteChannel out) throws IOException {
 		this.out = out;
@@ -121,73 +132,155 @@ public class PurpleJrankOutput implements ObjectOutput {
 	}
 
 	@Override
-	public void writeObject(Object obj) throws IOException {
-		// TODO Auto-generated method stub
+	protected void writeObjectOverride(Object obj) throws IOException {
+		writeObject0(obj, true);
+	}
+	
+	protected void writeObject0(Object obj, boolean shared) throws IOException {
 		ensureOpen().setBlockMode(false);
+		
+		if(obj == null) {
+			ensureCapacity(1).put(JrankableConstants.NULL);
+			return;
+		}
+		
+		if(!(obj instanceof Serializable))
+			throw new NotSerializableException(obj.getClass().getName());
+		
+		if(shared && wired.containsKey(obj)) {
+			ensureCapacity(6).put(JrankableConstants.REFERENCE);
+			writeEscapedInt(wired.get(obj));
+			return;
+		}
+		
+		if(!wired.containsKey(obj))
+			wired.put(obj, wired.size());
+		
+		if(obj.getClass().isArray()) {
+			ensureCapacity(1).put(JrankableConstants.ARRAY);
+			Jranklass d = writeClassDesc(obj.getClass());
+			context.offerLast(new JrankingContext(d, obj));
+			ensureCapacity(5);
+			int size;
+			writeEscapedInt(size = Array.getLength(obj));
+			Class<?> cmp = obj.getClass().getComponentType();
+			for(int i = 0; i < size; i++) {
+				if(cmp == byte.class) ensureCapacity(1).put(Array.getByte(obj, i));
+				else if(cmp == char.class) ensureCapacity(2).putChar(Array.getChar(obj, i));
+				else if(cmp == double.class) ensureCapacity(8).putDouble(Array.getDouble(obj, i));
+				else if(cmp == float.class) ensureCapacity(4).putFloat(Array.getFloat(obj, i));
+				else if(cmp == int.class) ensureCapacity(4).putInt(Array.getInt(obj, i));
+				else if(cmp == long.class) ensureCapacity(8).putLong(Array.getLong(obj, i));
+				else if(cmp == short.class) ensureCapacity(8).putShort(Array.getShort(obj, i));
+				else if(cmp == boolean.class) ensureCapacity(1).put((byte)(Array.getBoolean(obj, i) ? 1 : 0));
+				else writeObject(Array.get(obj, i));
+			}
+			context.pollLast();
+			return;
+		}
+		
+		if(obj instanceof String) {
+			ensureCapacity(1).put(JrankableConstants.STRING);
+			writeUTF((String) obj, false);
+			return;
+		}
+		
+		if(obj instanceof Enum<?>) {
+			ensureCapacity(1).put(JrankableConstants.ENUM);
+			writeClassDesc(obj.getClass());
+			writeObject(((Enum<?>) obj).name());
+		}
+		
+		ensureCapacity(1).put(JrankableConstants.OBJECT);
+		Jranklass d = writeClassDesc(obj.getClass());
+		
+		if(d.getFlags() == JrankableConstants.SC_WRITE_EXTERNAL) {
+			context.offerLast(new JrankingContext(d, obj));
+			((Externalizable) obj).writeExternal(this);
+			context.pollLast();
+		} else {
+			Jranklass t = d;
+			while(t != null) {
+				context.offerLast(new JrankingContext(t, obj));
+				if(t.getFlags() == JrankableConstants.SC_WRITE_OBJECT) {
+					try {
+						t.getType().getDeclaredMethod("writeObject", ObjectOutputStream.class).invoke(obj, this);
+					} catch(Exception e) {
+						throw new IOException(e);
+					}
+					setBlockMode(false).ensureCapacity(1).put(JrankableConstants.WALL);
+				} else {
+					writeFields(t, obj);
+					setBlockMode(false).ensureCapacity(1).put(JrankableConstants.WALL);
+				}
+				context.pollLast();
+				t = t.getParent();
+			}
+		}
+		
+	}
+	
+	private void writeFields(Jranklass t, Object obj) throws IOException {
+		setBlockMode(false).ensureCapacity(1).put(JrankableConstants.FIELDS);
+		for(Field f : t.getFields()) {
+			Class<?> fc = f.getType();
+			try {
+				if(fc == byte.class) writeByte(f.getByte(obj));
+				else if(fc == char.class) writeChar(f.getChar(obj));
+				else if(fc == double.class) writeDouble(f.getDouble(obj));
+				else if(fc == float.class) writeFloat(f.getFloat(obj));
+				else if(fc == int.class) writeInt(f.getInt(obj));
+				else if(fc == long.class) writeLong(f.getLong(obj));
+				else if(fc == short.class) writeShort(f.getShort(obj));
+				else if(fc == boolean.class) writeBoolean(f.getBoolean(obj));
+				else writeObject(f.get(obj));
+			} catch(IOException ioe) {
+				throw ioe;
+			} catch(Exception e) {
+				throw new IOException(e);
+			}
+		}
 	}
 
-	private void writeClassDesc(Class<?> cls) throws IOException {
+	private Jranklass writeClassDesc(Class<?> cls) throws IOException {
 		setBlockMode(false);
 		
 		if(cls == null) {
-			ensureCapacity(1);
-			buf.put(JrankableConstants.NULL);
-			return;
+			ensureCapacity(1).put(JrankableConstants.NULL);
+			return null;
 		}
 			
-		if(wired.containsKey(cls)) {
-			ensureCapacity(6);
-			buf.put(JrankableConstants.REFERENCE);
+		if(classdesc.containsKey(cls)) {
+			ensureCapacity(6).put(JrankableConstants.REFERENCE);
 			writeEscapedInt(wired.get(cls));
-			return;
+			return classdesc.get(cls);
 		}
 		
+		Jranklass d;
 		wired.put(cls, wired.size());
+		classdesc.put(cls, d = new Jranklass(cls));
 		
-		if(Proxy.isProxyClass(cls)) {
+		if(d.isProxy()) {
 			ensureCapacity(6).put(JrankableConstants.PROXYCLASSDESC);
-			Class<?>[] ifcs = cls.getInterfaces();
-			writeEscapedInt(ifcs.length);
-			for(Class<?> ifc : ifcs)
-				writeUTF(ifc.getName(), false);
+			writeEscapedInt(d.getProxyInterfaceNames().length);
+			for(String ifc : d.getProxyInterfaceNames())
+				writeUTF(ifc, false);
 		} else {
-			byte flags = JrankableConstants.SC_WRITE_FIELDS;
-			if(Enum.class.isAssignableFrom(cls))
-				flags = JrankableConstants.SC_WRITE_ENUM;
-			else if(Jrankternalizable.class.isAssignableFrom(cls))
-				flags = JrankableConstants.SC_WRITE_EXTERNAL;
-			else {
-				try {
-					cls.getDeclaredMethod("writeObject", PurpleJrankOutput.class);
-					flags = JrankableConstants.SC_WRITE_OBJECT;
-				} catch(NoSuchMethodException e) {
-				}
-			}
-			Field[] fields = cls.getDeclaredFields();
-			ensureCapacity(4).put(JrankableConstants.CLASSDESC).put(flags).putShort((short) fields.length);
-			for(Field f : fields) {
-				ensureCapacity(1);
-				if(f.getType() == byte.class) buf.put((byte) 'B');
-				else if(f.getType() == char.class) buf.put((byte) 'C');
-				else if(f.getType() == double.class) buf.put((byte) 'D');
-				else if(f.getType() == float.class) buf.put((byte) 'F');
-				else if(f.getType() == int.class) buf.put((byte) 'I');
-				else if(f.getType() == long.class) buf.put((byte) 'J');
-				else if(f.getType() == short.class) buf.put((byte) 'S');
-				else if(f.getType() == boolean.class) buf.put((byte) 'Z');
-				else if(f.getType().isArray()) buf.put((byte) '[');
-				else buf.put((byte) 'L');
-				
-				writeUTF(f.getName(), false);
-				
-				if(f.getType().isArray())
-					writeObject("[" + f.getType().getComponentType().getName() + ";");
-				else if(!f.getType().isPrimitive())
-					writeObject("L" + f.getType().getName() + ";");
+			ensureCapacity(1).put(JrankableConstants.CLASSDESC);
+			writeUTF(d.getName(), false);
+			ensureCapacity(3).put(d.getFlags()).putShort((short) d.getFieldNames().length);
+			for(int i = 0; i < d.getFieldNames().length; i++) {
+				ensureCapacity(1).put((byte) d.getFieldTypes()[i].charAt(0));
+				writeUTF(d.getFieldNames()[i], false);
+				if(d.getFieldTypes()[i].length() > 1)
+					writeUTF(d.getFieldTypes()[i].substring(1), false);
 			}
 		}
 		
-		writeClassDesc(cls.getSuperclass());
+		if(cls.getSuperclass() != null && Serializable.class.isAssignableFrom(cls.getSuperclass()))
+			d.setParent(writeClassDesc(cls.getSuperclass()));
+		
+		return d;
 	}
 	
 	@Override
@@ -233,5 +326,37 @@ public class PurpleJrankOutput implements ObjectOutput {
 		flush();
 		isClosed = true;
 		out.close();
+	}
+
+	@Override
+	public void writeUnshared(Object obj) throws IOException {
+		writeObject0(obj, false);
+	}
+
+	@Override
+	public void defaultWriteObject() throws IOException {
+		JrankingContext ctx = context.peekLast();
+		if(ctx == JrankingContext.NO_CONTEXT)
+			throw new NotActiveException();
+		writeFields(ctx.getType(), ctx.getObject());
+		setBlockMode(false).ensureCapacity(1).put(JrankableConstants.WALL);
+	}
+
+	@Override
+	public PutField putFields() throws IOException {
+		// TODO Auto-generated method stub
+		return super.putFields();
+	}
+
+	@Override
+	public void writeFields() throws IOException {
+		// TODO Auto-generated method stub
+		super.writeFields();
+	}
+
+	@Override
+	public void reset() throws IOException {
+		// TODO Auto-generated method stub
+		super.reset();
 	}
 }

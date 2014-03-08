@@ -18,6 +18,7 @@ public class JrankableConstants {
 	public static final byte EXCEPTION = 10;
 	public static final byte PROXYCLASSDESC = 11;
 	public static final byte ENUM = 11;
+	public static final byte FIELDS = 12;
 	
 	public static final byte SC_WRITE_FIELDS = 0;
 	public static final byte SC_WRITE_OBJECT = 1;
