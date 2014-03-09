@@ -92,14 +92,15 @@ public class JrankClass {
 		else if(fc == short.class) return "S";
 		else if(fc == boolean.class) return "Z";
 		else if(fc.isArray())
-			return arrayBrackets(fc) + ";";
+			return arrayBrackets(fc);
 		else
 			return "L" + fc.getName() + ";";
 	}
 	
 	private String arrayBrackets(Class<?> ac) {
-		if(!ac.isArray())
-			return ac.getName();
+		if(!ac.isArray()) {
+			return className(ac);
+		}
 		return "[" + arrayBrackets(ac.getComponentType());
 	}
 	

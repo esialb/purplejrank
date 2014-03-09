@@ -180,7 +180,7 @@ public class PurpleJrankOutput extends ObjectOutputStream implements ObjectOutpu
 			if(!wired.containsKey(obj))
 				wired.put(obj, wired.size());
 			int size;
-			writeEscapedInt(size = Array.getLength(obj));
+			setBlockMode(false).writeEscapedInt(size = Array.getLength(obj));
 			Class<?> cmp = obj.getClass().getComponentType();
 			context.offerLast(new JrankContext(d, obj));
 			for(int i = 0; i < size; i++) {

@@ -90,21 +90,18 @@ public class PurpleJrankInput extends ObjectInputStream implements ObjectInput {
 	}
 	
 	private int readEscapedInt() throws IOException {
-		return readEscapedInt(25);
+		return readEscapedInt(0);
 	}
 	
-	private int readEscapedInt(int maxBits) throws IOException {
+	private int readEscapedInt(int shift) throws IOException {
 		ensureOpen().ensureAvailable(1);
 		int v = 0xff & buf.get();
 		boolean more = (v & 0x80) != 0;
 		v &= 0x7f;
-		int shift = maxBits - 7;
-		if(shift > 0 && more) {
-			v = v << shift;
-			v |= readEscapedInt(shift);
-		} else if(shift < 0)
-			v = v >>> -shift;
-		return v;
+		if(more) {
+			v |= readEscapedInt(shift + 7);
+		}
+		return v << shift;
 	}
 
 	@Override
@@ -218,7 +215,7 @@ public class PurpleJrankInput extends ObjectInputStream implements ObjectInput {
 			
 		case JrankConstants.ARRAY:
 			JrankClass d = readClassDesc();
-			int size = readEscapedInt();
+			int size = setBlockMode(false).readEscapedInt();
 			Class<?> cmp = d.getType().getComponentType();
 			obj = Array.newInstance(cmp, size);
 			wired.add(obj);
@@ -269,6 +266,7 @@ public class PurpleJrankInput extends ObjectInputStream implements ObjectInput {
 					if(t.getFlags() == JrankConstants.SC_WRITE_OBJECT) {
 						try {
 							Method m = t.getType().getDeclaredMethod("readObject", ObjectInputStream.class);
+							m.setAccessible(true);
 							m.invoke(obj, this);
 						} catch(Exception ex) {
 							throw new IOException(ex);
@@ -361,10 +359,11 @@ public class PurpleJrankInput extends ObjectInputStream implements ObjectInput {
 			
 			d.setProxy(true);
 			d.setProxyInterfaceNames(ifcs);
-			d.setParent(readClassDesc());
 			
 			d.setType(resolveProxyClass(d.getProxyInterfaceNames()));
 			
+			d.setParent(readClassDesc());
+
 			return d;
 			
 		case JrankConstants.CLASSDESC:
@@ -439,7 +438,7 @@ public class PurpleJrankInput extends ObjectInputStream implements ObjectInput {
 		if("S".equals(name)) return short.class;
 		if("Z".equals(name)) return boolean.class;
 		if(name.startsWith("[")) {
-			Class<?> c = resolveClass("L" + name.replaceAll("\\[", ""));
+			Class<?> c = resolveClass(name.replaceAll("\\[", ""));
 			int depth = name.replaceAll("[^\\[]", "").length();
 			return Array.newInstance(c, new int[depth]).getClass();
 		}
