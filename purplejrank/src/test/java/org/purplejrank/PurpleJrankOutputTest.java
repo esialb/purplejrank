@@ -16,5 +16,6 @@ public class PurpleJrankOutputTest {
 		WritableByteChannel ch = new StreamWritableByteChannel(new ByteArrayOutputStream());
 		ObjectOutputStream out = new PurpleJrankOutput(ch);
 		out.writeObject(a);
+		out.close();
 	}
 }

@@ -19,6 +19,7 @@ import org.junit.runners.Parameterized.Parameters;
 
 @RunWith(Parameterized.class)
 public class PurpleJrankTest implements Serializable {
+	private static final long serialVersionUID = 0;
 	
 	@Parameters
 	public static Iterable<Object[]> params() {
@@ -36,6 +37,7 @@ public class PurpleJrankTest implements Serializable {
 	}
 	
 	public class S implements Serializable {
+		private static final long serialVersionUID = 0;
 		private int foo = 1;
 		
 		@Override

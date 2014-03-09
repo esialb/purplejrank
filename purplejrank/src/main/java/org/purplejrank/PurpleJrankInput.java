@@ -7,7 +7,6 @@ import java.io.NotActiveException;
 import java.io.ObjectInput;
 import java.io.ObjectInputStream;
 import java.io.ObjectInputValidation;
-import java.io.ObjectStreamClass;
 import java.io.StreamCorruptedException;
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
@@ -21,7 +20,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Deque;
 import java.util.List;
-import java.util.Map;
 
 import org.objenesis.ObjenesisHelper;
 import org.objenesis.instantiator.basic.ConstructorInstantiator;
@@ -196,6 +194,7 @@ public class PurpleJrankInput extends ObjectInputStream implements ObjectInput {
 		return readObject0(true);
 	}
 	
+	@SuppressWarnings("unchecked")
 	private Object readObject0(boolean shared) throws IOException, ClassNotFoundException {
 		ensureOpen().setBlockMode(false);
 		
@@ -455,6 +454,7 @@ public class PurpleJrankInput extends ObjectInputStream implements ObjectInput {
 		return Proxy.getProxyClass(cl, ifcs);
 	}
 	
+	@SuppressWarnings({ "rawtypes", "unchecked" })
 	protected Object instantiate(JrankClass desc) {
 		if(desc.getFlags() == JrankConstants.SC_WRITE_EXTERNAL)
 			return new ConstructorInstantiator(desc.getType()).newInstance();
