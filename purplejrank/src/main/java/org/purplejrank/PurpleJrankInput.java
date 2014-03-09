@@ -85,20 +85,17 @@ public class PurpleJrankInput extends ObjectInputStream implements ObjectInput {
 
 	@Override
 	public void readFully(byte[] b) throws IOException {
-		// TODO Auto-generated method stub
-		
+		read(b);
 	}
 
 	@Override
 	public void readFully(byte[] b, int off, int len) throws IOException {
-		// TODO Auto-generated method stub
-		
+		read(b, off, len);
 	}
 
 	@Override
 	public int skipBytes(int n) throws IOException {
-		// TODO Auto-generated method stub
-		return 0;
+		return (int) skip(n);
 	}
 
 	@Override
