@@ -203,15 +203,14 @@ public class PurpleJrankInput extends ObjectInputStream implements ObjectInput {
 		ensureOpen().setBlockMode(false);
 		
 		Object obj = null;
+		int handle = -1;
 		
-		byte tok;
-		
-		switch(tok = ensureAvailable(1).get()) {
+		switch(ensureAvailable(1).get()) {
 		case JrankConstants.NULL:
 			return null;
 			
 		case JrankConstants.REFERENCE:
-			int handle = readEscapedInt();
+			handle = readEscapedInt();
 			if(shared)
 				return wired.get(handle);
 			obj = clone(wired.get(handle));
@@ -257,7 +256,9 @@ public class PurpleJrankInput extends ObjectInputStream implements ObjectInput {
 		case JrankConstants.OBJECT:
 			d = readClassDesc();
 			obj = instantiate(d);
+			handle = wired.size();
 			wired.add(obj);
+			
 			if(d.getFlags() == JrankConstants.SC_WRITE_EXTERNAL) {
 				context.offerLast(new JrankContext(d, obj));
 				((Externalizable) obj).readExternal(this);
@@ -281,6 +282,17 @@ public class PurpleJrankInput extends ObjectInputStream implements ObjectInput {
 					context.pollLast();
 				}
 			}
+			
+			Method m = findReadResolve(obj);
+			if(m != null) {
+				try {
+					obj = m.invoke(obj);
+					wired.set(handle, obj);
+				} catch(Exception e) {
+					throw new IOException(e);
+				}
+			}
+			
 			break;
 			
 		default:
@@ -403,6 +415,19 @@ public class PurpleJrankInput extends ObjectInputStream implements ObjectInput {
 		throw new StreamCorruptedException();
 	}
 
+	private Method findReadResolve(Object obj) {
+		Class<?> cls = obj.getClass();
+		while(cls != null) {
+			try {
+				Method m = cls.getDeclaredMethod("readResolve");
+				m.setAccessible(true);
+				return m;
+			} catch(NoSuchMethodException e) {}
+			cls = cls.getSuperclass();
+		}
+		return null;
+	}
+	
 	protected Class<?> resolveClass(String name) throws IOException,
 			ClassNotFoundException {
 		if("B".equals(name)) return byte.class;
