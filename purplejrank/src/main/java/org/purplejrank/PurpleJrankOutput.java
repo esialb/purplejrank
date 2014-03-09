@@ -165,9 +165,6 @@ public class PurpleJrankOutput extends ObjectOutputStream implements ObjectOutpu
 			return;
 		}
 		
-		if(!wired.containsKey(obj))
-			wired.put(obj, wired.size());
-		
 		Method writeReplace = findWriteReplace(obj);
 		if(writeReplace != null) {
 			try {
@@ -180,6 +177,8 @@ public class PurpleJrankOutput extends ObjectOutputStream implements ObjectOutpu
 		if(obj.getClass().isArray()) {
 			ensureCapacity(1).put(JrankConstants.ARRAY);
 			JrankClass d = writeClassDesc(obj.getClass());
+			if(!wired.containsKey(obj))
+				wired.put(obj, wired.size());
 			int size;
 			writeEscapedInt(size = Array.getLength(obj));
 			Class<?> cmp = obj.getClass().getComponentType();
@@ -200,6 +199,8 @@ public class PurpleJrankOutput extends ObjectOutputStream implements ObjectOutpu
 		}
 		
 		if(obj instanceof String) {
+			if(!wired.containsKey(obj))
+				wired.put(obj, wired.size());
 			ensureCapacity(1).put(JrankConstants.STRING);
 			writeUTF((String) obj, false);
 			return;
@@ -208,11 +209,15 @@ public class PurpleJrankOutput extends ObjectOutputStream implements ObjectOutpu
 		if(obj instanceof Enum<?>) {
 			ensureCapacity(1).put(JrankConstants.ENUM);
 			writeClassDesc(obj.getClass());
+			if(!wired.containsKey(obj))
+				wired.put(obj, wired.size());
 			writeObject(((Enum<?>) obj).name());
 		}
 		
 		ensureCapacity(1).put(JrankConstants.OBJECT);
 		JrankClass d = writeClassDesc(obj.getClass());
+		if(!wired.containsKey(obj))
+			wired.put(obj, wired.size());
 		
 		if(d.getFlags() == JrankConstants.SC_WRITE_EXTERNAL) {
 			context.offerLast(new JrankContext(d, obj));

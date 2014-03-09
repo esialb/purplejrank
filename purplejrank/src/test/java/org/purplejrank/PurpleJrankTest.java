@@ -4,6 +4,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.io.Serializable;
 import java.util.Arrays;
 
 import org.junit.Assert;
@@ -14,13 +15,14 @@ import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 
 @RunWith(Parameterized.class)
-public class PurpleJrankTest {
+public class PurpleJrankTest implements Serializable {
 	
 	@Parameters
 	public static Iterable<Object[]> params() {
 		return Arrays.asList(
 				new Object[] {1},
-				new Object[] {"two"}
+				new Object[] {"two"},
+				new Object[] {Arrays.asList(1,1,1)}
 				);
 	}
 
@@ -72,7 +74,6 @@ public class PurpleJrankTest {
 		ObjectInputStream in = new PurpleJrankInput(ch);
 		Object actual = in.readObject();
 		in.close();
-		
 		Assert.assertEquals(obj, actual);;
 	}
 }

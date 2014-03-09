@@ -233,8 +233,10 @@ public class PurpleJrankInput extends ObjectInputStream implements ObjectInput {
 				else if(cmp == long.class) Array.setLong(obj, i, ensureAvailable(8).getLong());
 				else if(cmp == short.class) Array.setShort(obj, i, ensureAvailable(2).getShort());
 				else if(cmp == boolean.class) Array.setBoolean(obj, i, ensureAvailable(1).get() != 0);
-				else Array.set(obj, i, readObject0(true));
-				
+				else { 
+					Object o = readObject0(true);
+					Array.set(obj, i, o);
+				}
 				setBlockMode(false);
 			}
 			context.pollLast();
@@ -247,14 +249,15 @@ public class PurpleJrankInput extends ObjectInputStream implements ObjectInput {
 			
 		case JrankConstants.ENUM:
 			d = readClassDesc();
+			wired.add(obj);
 			String name = (String) readObject0(true);
 			obj = Enum.valueOf(d.getType().asSubclass(Enum.class), name);
-			wired.add(obj);
 			break;
 			
 		case JrankConstants.OBJECT:
 			d = readClassDesc();
 			obj = instantiate(d);
+			wired.add(obj);
 			if(d.getFlags() == JrankConstants.SC_WRITE_EXTERNAL) {
 				context.offerLast(new JrankContext(d, obj));
 				((Externalizable) obj).readExternal(this);
@@ -337,6 +340,8 @@ public class PurpleJrankInput extends ObjectInputStream implements ObjectInput {
 			
 		case JrankConstants.PROXYCLASSDESC:
 			d = new JrankClass();
+			wired.add(d);
+			
 			int nifc = readEscapedInt();
 			String[] ifcs = new String[nifc];
 			for(int i = 0; i < nifc; i++)
@@ -365,12 +370,13 @@ public class PurpleJrankInput extends ObjectInputStream implements ObjectInput {
 			}
 			
 			d = new JrankClass();
+			wired.add(d);
+			
 			d.setProxy(false);
 			d.setName(name);
 			d.setFlags(flags);
 			d.setFieldNames(fieldNames);
 			d.setFieldTypes(fieldTypes);
-			d.setParent(readClassDesc());
 
 			d.setType(resolveClass(d.getName()));
 			Field[] fields = new Field[nfields];
@@ -389,6 +395,8 @@ public class PurpleJrankInput extends ObjectInputStream implements ObjectInput {
 			Field.setAccessible(fields, true);
 			d.setFields(fields);
 			
+			d.setParent(readClassDesc());
+			
 			return d;
 		}
 		
@@ -406,7 +414,7 @@ public class PurpleJrankInput extends ObjectInputStream implements ObjectInput {
 		if("S".equals(name)) return short.class;
 		if("Z".equals(name)) return boolean.class;
 		if(name.startsWith("[")) {
-			Class<?> c = Class.forName(name.replaceAll("[", "").replace(";", ""), false, cl);
+			Class<?> c = resolveClass("L" + name.replaceAll("\\[", ""));
 			int depth = name.replaceAll("[^\\[]", "").length();
 			return Array.newInstance(c, new int[depth]).getClass();
 		}

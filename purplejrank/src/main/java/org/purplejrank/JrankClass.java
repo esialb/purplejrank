@@ -34,46 +34,45 @@ public class JrankClass {
 			for(int i = 0; i < ifcs.length; i++)
 				proxyInterfaceNames[i] = ifcs[i].getName();
 		} else if(cls.isArray()) {
-			Class<?> c = cls;
-			name = "";
-			while(c.isArray()) {
-				name += "[";
-				c = c.getComponentType();
-			}
-			name += c.getName() + ";";
+			name = className(cls);
+			setFieldFields(cls);
 		} else {
-			flags = 0;
-			if(Enum.class.isAssignableFrom(cls))
-				flags = JrankConstants.SC_WRITE_ENUM;
-			else if(Externalizable.class.isAssignableFrom(cls))
-				flags = JrankConstants.SC_WRITE_EXTERNAL;
-			else {
-				try {
-					cls.getDeclaredMethod("writeObject", ObjectOutputStream.class);
-					flags = JrankConstants.SC_WRITE_OBJECT;
-				} catch(NoSuchMethodException e) {
-					if(Serializable.class.isAssignableFrom(cls))
-						flags = JrankConstants.SC_WRITE_FIELDS;
-				}
-			}
 			name = "L" + cls.getName() + ";";
-			fields = cls.getDeclaredFields();
-			Field.setAccessible(fields, true);
-			fieldNames = new String[fields.length];
-			fieldTypes = new String[fields.length];
-			int fi = 0;
-			for(int i = 0; i < fields.length; i++) {
-				if(Modifier.isStatic(fields[i].getModifiers()) || Modifier.isTransient(fields[i].getModifiers()))
-					continue;
-				fieldNames[fi] = fields[i].getName();
-				fieldTypes[fi] = className(fields[i].getType());
-				fields[fi] = fields[i];
-				fi++;
-			}
-			fieldNames = Arrays.copyOf(fieldNames, fi);
-			fieldTypes = Arrays.copyOf(fieldTypes, fi);
-			fields = Arrays.copyOf(fields, fi);
+			setFieldFields(cls);
 		}
+	}
+	
+	private void setFieldFields(Class<?> cls) {
+		flags = 0;
+		if(Enum.class.isAssignableFrom(cls))
+			flags = JrankConstants.SC_WRITE_ENUM;
+		else if(Externalizable.class.isAssignableFrom(cls))
+			flags = JrankConstants.SC_WRITE_EXTERNAL;
+		else {
+			try {
+				cls.getDeclaredMethod("writeObject", ObjectOutputStream.class);
+				flags = JrankConstants.SC_WRITE_OBJECT;
+			} catch(NoSuchMethodException e) {
+				if(Serializable.class.isAssignableFrom(cls))
+					flags = JrankConstants.SC_WRITE_FIELDS;
+			}
+		}
+		fields = cls.getDeclaredFields();
+		Field.setAccessible(fields, true);
+		fieldNames = new String[fields.length];
+		fieldTypes = new String[fields.length];
+		int fi = 0;
+		for(int i = 0; i < fields.length; i++) {
+			if(Modifier.isStatic(fields[i].getModifiers()) || Modifier.isTransient(fields[i].getModifiers()))
+				continue;
+			fieldNames[fi] = fields[i].getName();
+			fieldTypes[fi] = className(fields[i].getType());
+			fields[fi] = fields[i];
+			fi++;
+		}
+		fieldNames = Arrays.copyOf(fieldNames, fi);
+		fieldTypes = Arrays.copyOf(fieldTypes, fi);
+		fields = Arrays.copyOf(fields, fi);
 	}
 	
 	@Override
