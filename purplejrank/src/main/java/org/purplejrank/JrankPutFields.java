@@ -10,7 +10,7 @@ public class JrankPutFields extends PutField {
 	
 	private Map<String, Object> values = new HashMap<String, Object>();
 	
-	public Object get(String name) {
+	Object get(String name) {
 		return values.get(name);
 	}
 

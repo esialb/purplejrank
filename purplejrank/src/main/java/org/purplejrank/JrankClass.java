@@ -106,15 +106,47 @@ public class JrankClass {
 	public JrankClass getParent() {
 		return parent;
 	}
-	void setParent(JrankClass parent) {
-		this.parent = parent;
-	}
-
 	public Class<?> getType() {
 		return type;
 	}
 	
 	public Field[] getFields() {
 		return fields;
+	}
+
+	void setProxy(boolean proxy) {
+		this.proxy = proxy;
+	}
+
+	void setProxyInterfaceNames(String[] proxyInterfaceNames) {
+		this.proxyInterfaceNames = proxyInterfaceNames;
+	}
+
+	void setFlags(byte flags) {
+		this.flags = flags;
+	}
+
+	void setName(String name) {
+		this.name = name;
+	}
+
+	void setFieldNames(String[] fieldNames) {
+		this.fieldNames = fieldNames;
+	}
+
+	void setFieldTypes(String[] fieldTypes) {
+		this.fieldTypes = fieldTypes;
+	}
+
+	void setParent(JrankClass parent) {
+		this.parent = parent;
+	}
+
+	void setType(Class<?> type) {
+		this.type = type;
+	}
+
+	void setFields(Field[] fields) {
+		this.fields = fields;
 	}
 }
