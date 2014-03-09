@@ -118,6 +118,14 @@ public class PurpleJrankOutput extends ObjectOutputStream implements ObjectOutpu
 		} else
 			buf.put((byte)v);
 	}
+	
+	private void writeEscapedInt(ByteBuffer buf, int v) {
+		if((v & 0x7f) != v) {
+			buf.put((byte)(0x80 | (0x7f & v)));
+			writeEscapedInt(buf, v >>> 7);
+		} else
+			buf.put((byte)v);
+	}
 
 	@Override
 	public void writeUTF(String s) throws IOException {
@@ -315,7 +323,7 @@ public class PurpleJrankOutput extends ObjectOutputStream implements ObjectOutpu
 		ensureOpen();
 		if(this.blockMode) {
 			blockHeader.put(JrankConstants.BLOCK_DATA);
-			blockHeader.putInt(buf.position());
+			writeEscapedInt(blockHeader, buf.position());
 			out.write((ByteBuffer) blockHeader.flip());
 			blockHeader.clear();
 		}
