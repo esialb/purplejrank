@@ -51,6 +51,7 @@ public class PurpleJrankTest {
 		}
 		
 		byte[] buf = bout.toByteArray();
+/*		
 		int pos = 0;
 		while(pos < buf.length) {
 			byte[] block = Arrays.copyOfRange(buf, pos, Math.min(buf.length, pos + 32));
@@ -64,6 +65,7 @@ public class PurpleJrankTest {
 			System.out.println(" " + Arrays.toString(block));
 			pos += block.length;
 		}
+*/
 		
 		ByteArrayInputStream bin = new ByteArrayInputStream(buf);
 		StreamReadableByteChannel ch = new StreamReadableByteChannel(bin);
