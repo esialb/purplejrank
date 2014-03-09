@@ -40,6 +40,14 @@ public class PurpleJrankInput extends ObjectInputStream implements ObjectInput {
 	
 	public PurpleJrankInput(ReadableByteChannel in) throws IOException {
 		this.in = in;
+		buf.limit(0);
+		ensureAvailable(8);
+		int magic = buf.getInt();
+		int version = buf.getInt();
+		if(magic != JrankConstants.MAGIC)
+			throw new IOException("invalid magic");
+		if(version != JrankConstants.VERSION)
+			throw new IOException("invalid version");
 	}
 	
 	private PurpleJrankInput ensureOpen() throws IOException {
@@ -71,8 +79,12 @@ public class PurpleJrankInput extends ObjectInputStream implements ObjectInput {
 	
 	private ByteBuffer ensureAvailable(int available) throws IOException {
 		if(buf.remaining() < available) {
-			in.read(buf.compact());
-			buf.flip();
+			int r = buf.remaining();
+			buf.compact();
+			buf.position(r);
+			buf.limit(r + available);
+			in.read(buf);
+			buf.position(0);
 		}
 		return buf;
 	}

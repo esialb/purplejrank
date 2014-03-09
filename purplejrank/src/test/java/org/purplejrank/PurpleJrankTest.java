@@ -49,6 +49,9 @@ public class PurpleJrankTest {
 		} catch(Exception e) {
 			Assume.assumeNoException(e);;
 		}
+		
+		System.out.println(Arrays.toString(bout.toByteArray()));
+		
 		ByteArrayInputStream bin = new ByteArrayInputStream(bout.toByteArray());
 		StreamReadableByteChannel ch = new StreamReadableByteChannel(bin);
 		ObjectInputStream in = new PurpleJrankInput(ch);
