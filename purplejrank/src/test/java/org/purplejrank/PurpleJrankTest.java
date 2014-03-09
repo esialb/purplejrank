@@ -5,7 +5,9 @@ import java.io.ByteArrayOutputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 import org.junit.Assert;
 import org.junit.Assume;
@@ -19,11 +21,31 @@ public class PurpleJrankTest implements Serializable {
 	
 	@Parameters
 	public static Iterable<Object[]> params() {
-		return Arrays.asList(
-				new Object[] {1},
-				new Object[] {"two"},
-				new Object[] {Arrays.asList(1,1,1)}
+		List<Object> objs = Arrays.asList(
+				1,
+				"two",
+				Arrays.asList(1,1,1),
+				new PurpleJrankTest(null).new S()
 				);
+		List<Object[]> ret = new ArrayList<Object[]>(objs.size());
+		for(int i = 0; i < objs.size(); i++)
+			ret.add(new Object[] {objs.get(i)});
+		return ret;
+	}
+	
+	public class S implements Serializable {
+		private int foo = 1;
+		
+		@Override
+		public boolean equals(Object obj) {
+			if(obj == null)
+				return false;
+			if(obj == this)
+				return true;
+			if(obj instanceof S)
+				return foo == ((S) obj).foo;
+			return false;
+		}
 	}
 
 	private Object obj;
