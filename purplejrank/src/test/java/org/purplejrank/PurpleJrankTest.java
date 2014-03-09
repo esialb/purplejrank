@@ -50,9 +50,22 @@ public class PurpleJrankTest {
 			Assume.assumeNoException(e);;
 		}
 		
-		System.out.println(Arrays.toString(bout.toByteArray()));
+		byte[] buf = bout.toByteArray();
+		int pos = 0;
+		while(pos < buf.length) {
+			byte[] block = Arrays.copyOfRange(buf, pos, Math.min(buf.length, pos + 32));
+			char[] chars = new char[block.length];
+			for(int i = 0; i < block.length; i++) {
+				char c = (char)(0xff & (int) block[i]);
+				if(!Character.isLetter(c))
+					c = '.';
+				System.out.print(c);
+			}
+			System.out.println(" " + Arrays.toString(block));
+			pos += block.length;
+		}
 		
-		ByteArrayInputStream bin = new ByteArrayInputStream(bout.toByteArray());
+		ByteArrayInputStream bin = new ByteArrayInputStream(buf);
 		StreamReadableByteChannel ch = new StreamReadableByteChannel(bin);
 		ObjectInputStream in = new PurpleJrankInput(ch);
 		Object actual = in.readObject();

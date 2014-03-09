@@ -230,10 +230,10 @@ public class PurpleJrankOutput extends ObjectOutputStream implements ObjectOutpu
 					} catch(Exception e) {
 						throw new IOException(e);
 					}
-					setBlockMode(false).ensureCapacity(1).put(JrankConstants.WALL);
 				} else {
 					defaultWriteObject();
 				}
+				setBlockMode(false).ensureCapacity(1).put(JrankConstants.WALL);
 				context.pollLast();
 				t = t.getParent();
 			}
@@ -244,7 +244,7 @@ public class PurpleJrankOutput extends ObjectOutputStream implements ObjectOutpu
 	private JrankClass writeClassDesc(Class<?> cls) throws IOException {
 		setBlockMode(false);
 		
-		if(cls == null) {
+		if(cls == null || !Serializable.class.isAssignableFrom(cls)) {
 			ensureCapacity(1).put(JrankConstants.NULL);
 			return null;
 		}
@@ -260,7 +260,7 @@ public class PurpleJrankOutput extends ObjectOutputStream implements ObjectOutpu
 		classdesc.put(cls, d = new JrankClass(cls));
 		
 		if(d.isProxy()) {
-			ensureCapacity(6).put(JrankConstants.PROXYCLASSDESC);
+			ensureCapacity(1).put(JrankConstants.PROXYCLASSDESC);
 			writeEscapedInt(d.getProxyInterfaceNames().length);
 			for(String ifc : d.getProxyInterfaceNames())
 				writeUTF(ifc, false);
@@ -276,8 +276,7 @@ public class PurpleJrankOutput extends ObjectOutputStream implements ObjectOutpu
 			}
 		}
 		
-		if(cls.getSuperclass() != null && Serializable.class.isAssignableFrom(cls.getSuperclass()))
-			d.setParent(writeClassDesc(cls.getSuperclass()));
+		d.setParent(writeClassDesc(cls.getSuperclass()));
 		
 		return d;
 	}

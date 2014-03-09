@@ -76,6 +76,13 @@ public class JrankClass {
 		}
 	}
 	
+	@Override
+	public String toString() {
+		if(proxy)
+			return "proxy" + Arrays.toString(proxyInterfaceNames);
+		return name + Arrays.toString(fieldNames);
+	}
+	
 	private String className(Class<?> fc) {
 		if(fc == byte.class) return "B";
 		else if(fc == char.class) return "C";

@@ -32,4 +32,9 @@ public class JrankContext {
 	public JrankGetFields getGetFields() {
 		return getFields;
 	}
+	
+	@Override
+	public String toString() {
+		return String.valueOf(type);
+	}
 }

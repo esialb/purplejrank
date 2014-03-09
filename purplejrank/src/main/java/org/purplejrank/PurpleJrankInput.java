@@ -31,8 +31,8 @@ public class PurpleJrankInput extends ObjectInputStream implements ObjectInput {
 
 	private boolean isClosed = false;
 	private ReadableByteChannel in;
-	private ByteBuffer buf = ByteBuffer.allocateDirect(JrankConstants.MAX_BLOCK_SIZE);
-	private int blockRemaining = 0;
+	private ByteBuffer buf = ByteBuffer.allocate(JrankConstants.MAX_BLOCK_SIZE);
+	private int blockEnd = 0;
 	
 	private ClassLoader cl = PurpleJrankInput.class.getClassLoader();
 	private List<Object> wired = new ArrayList<Object>();
@@ -61,18 +61,18 @@ public class PurpleJrankInput extends ObjectInputStream implements ObjectInput {
 	
 	private PurpleJrankInput setBlockMode(boolean blockMode) throws IOException {
 		ensureOpen();
-		if(blockRemaining > 0 && !blockMode) {
-			buf.position(buf.position() + blockRemaining);
-			buf.compact();
-			return this;
-		}
-		if(blockRemaining > 0)
+		if(blockEnd > 0 && blockMode)
 			return this;
 		if(blockMode) {
 			ensureAvailable(1);
 			if(buf.get() != JrankConstants.BLOCK_DATA)
 				throw new StreamCorruptedException("Not at block boundary");
-			ensureAvailable(blockRemaining = readEscapedInt());
+			ensureAvailable(blockEnd = readEscapedInt());
+			buf.limit(blockEnd);
+		} else if(blockEnd > 0) {
+			blockEnd = 0;
+			buf.position(0);
+			buf.limit(0);
 		}
 		return this;
 	}
@@ -204,7 +204,9 @@ public class PurpleJrankInput extends ObjectInputStream implements ObjectInput {
 		
 		Object obj = null;
 		
-		switch(ensureAvailable(1).get()) {
+		byte tok;
+		
+		switch(tok = ensureAvailable(1).get()) {
 		case JrankConstants.NULL:
 			return null;
 			
@@ -270,9 +272,13 @@ public class PurpleJrankInput extends ObjectInputStream implements ObjectInput {
 						skipOptionalData();
 					} else
 						defaultReadObject();
+					setBlockMode(false).ensureAvailable(1);
+					if(buf.get() != JrankConstants.WALL)
+						throw new StreamCorruptedException();
 					context.pollLast();
 				}
 			}
+			break;
 			
 		default:
 			throw new StreamCorruptedException();
@@ -319,6 +325,8 @@ public class PurpleJrankInput extends ObjectInputStream implements ObjectInput {
 	private JrankClass readClassDesc() throws IOException, ClassNotFoundException {
 		ensureOpen().setBlockMode(false).ensureAvailable(1);
 		
+		JrankClass d;
+		
 		switch(buf.get()) {
 		case JrankConstants.NULL:
 			return null;
@@ -328,7 +336,7 @@ public class PurpleJrankInput extends ObjectInputStream implements ObjectInput {
 			return (JrankClass) wired.get(handle);
 			
 		case JrankConstants.PROXYCLASSDESC:
-			JrankClass d = new JrankClass();
+			d = new JrankClass();
 			int nifc = readEscapedInt();
 			String[] ifcs = new String[nifc];
 			for(int i = 0; i < nifc; i++)
@@ -402,6 +410,7 @@ public class PurpleJrankInput extends ObjectInputStream implements ObjectInput {
 			int depth = name.replaceAll("[^\\[]", "").length();
 			return Array.newInstance(c, new int[depth]).getClass();
 		}
+		name = name.substring(1, name.length() - 1);
 		return Class.forName(name, false, cl);
 	}
 	
@@ -449,7 +458,9 @@ public class PurpleJrankInput extends ObjectInputStream implements ObjectInput {
 
 	@Override
 	public int available() throws IOException {
-		return blockRemaining;
+		if(blockEnd == 0)
+			return 0;
+		return blockEnd - buf.position();
 	}
 
 	@Override
@@ -492,21 +503,21 @@ public class PurpleJrankInput extends ObjectInputStream implements ObjectInput {
 		for(int i = 0; i < desc.getFieldNames().length; i++) {
 			String name = desc.getFieldNames()[i];
 			String type = desc.getFieldTypes()[i];
-			setBlockMode(false);
 			Object obj;
-			if("B".equals(type)) obj = ensureAvailable(1).get();
-			else if("C".equals(type)) obj = ensureAvailable(2).getChar();
-			else if("D".equals(type)) obj = ensureAvailable(8).getDouble();
-			else if("F".equals(type)) obj = ensureAvailable(4).getFloat();
-			else if("I".equals(type)) obj = ensureAvailable(4).getInt();
-			else if("J".equals(type)) obj = ensureAvailable(8).getLong();
-			else if("S".equals(type)) obj = ensureAvailable(2).getShort();
-			else if("Z".equals(type)) obj = ensureAvailable(1).get() != 0;
+			if("B".equals(type)) obj = readByte();
+			else if("C".equals(type)) obj = readChar();
+			else if("D".equals(type)) obj = readDouble();
+			else if("F".equals(type)) obj = readFloat();
+			else if("I".equals(type)) obj = readInt();
+			else if("J".equals(type)) obj = readLong();
+			else if("S".equals(type)) obj = readShort();
+			else if("Z".equals(type)) obj = readBoolean();
 			else obj = readObject0(true);
 			fields.put(name, obj);
 		}
 		setBlockMode(false).ensureAvailable(1);
-		if(buf.get() != JrankConstants.WALL)
+		byte wall = buf.get();
+		if(wall != JrankConstants.WALL)
 			throw new StreamCorruptedException();
 		return fields;
 	}
