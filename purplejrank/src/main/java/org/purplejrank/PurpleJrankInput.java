@@ -191,14 +191,13 @@ public class PurpleJrankInput extends ObjectInputStream implements ObjectInput {
 		ensureOpen().setBlockMode(false);
 		
 		Object obj = null;
-		int handle;
 		
 		switch(ensureAvailable(1).get()) {
 		case JrankConstants.NULL:
 			return null;
 			
 		case JrankConstants.REFERENCE:
-			handle = readEscapedInt();
+			int handle = readEscapedInt();
 			if(shared)
 				return wired.get(handle);
 			obj = clone(wired.get(handle));

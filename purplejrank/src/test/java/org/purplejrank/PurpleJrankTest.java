@@ -6,6 +6,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.Arrays;
 
+import org.junit.Assert;
 import org.junit.Assume;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -51,7 +52,9 @@ public class PurpleJrankTest {
 		ByteArrayInputStream bin = new ByteArrayInputStream(bout.toByteArray());
 		StreamReadableByteChannel ch = new StreamReadableByteChannel(bin);
 		ObjectInputStream in = new PurpleJrankInput(ch);
-		in.readObject();
+		Object actual = in.readObject();
 		in.close();
+		
+		Assert.assertEquals(obj, actual);;
 	}
 }
