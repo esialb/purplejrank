@@ -20,15 +20,27 @@ public class JrankClass {
 	private Class<?> type;
 	private Field[] fields;
 	
+	JrankClass() {}
+	
 	public JrankClass(Class<?> cls) {
 		this.type = cls;
 		
-		if(Proxy.isProxyClass(cls)) {
+		if(cls.isPrimitive()) {
+			name = className(cls);
+		} else if(Proxy.isProxyClass(cls)) {
 			proxy = true;
 			Class<?>[] ifcs = cls.getInterfaces();
 			proxyInterfaceNames = new String[ifcs.length];
 			for(int i = 0; i < ifcs.length; i++)
 				proxyInterfaceNames[i] = ifcs[i].getName();
+		} else if(cls.isArray()) {
+			Class<?> c = cls;
+			name = "";
+			while(c.isArray()) {
+				name += "[";
+				c = c.getComponentType();
+			}
+			name += c.getName() + ";";
 		} else {
 			flags = 0;
 			if(Enum.class.isAssignableFrom(cls))
@@ -44,7 +56,7 @@ public class JrankClass {
 						flags = JrankConstants.SC_WRITE_FIELDS;
 				}
 			}
-			name = cls.getName();
+			name = "L" + cls.getName() + ";";
 			fields = cls.getDeclaredFields();
 			Field.setAccessible(fields, true);
 			fieldNames = new String[fields.length];

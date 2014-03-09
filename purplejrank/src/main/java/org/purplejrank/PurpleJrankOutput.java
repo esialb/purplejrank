@@ -119,7 +119,8 @@ public class PurpleJrankOutput extends ObjectOutputStream implements ObjectOutpu
 			buf.put((byte)v);
 	}
 	
-	private void writeEscapedInt(ByteBuffer buf, int v) {
+	private void writeEscapedInt(ByteBuffer buf, int v) throws IOException {
+		ensureCapacity(1);
 		if((v & 0x7f) != v) {
 			buf.put((byte)(0x80 | (0x7f & v)));
 			writeEscapedInt(buf, v >>> 7);
@@ -179,11 +180,10 @@ public class PurpleJrankOutput extends ObjectOutputStream implements ObjectOutpu
 		if(obj.getClass().isArray()) {
 			ensureCapacity(1).put(JrankConstants.ARRAY);
 			JrankClass d = writeClassDesc(obj.getClass());
-			context.offerLast(new JrankContext(d, obj));
-			ensureCapacity(5);
 			int size;
 			writeEscapedInt(size = Array.getLength(obj));
 			Class<?> cmp = obj.getClass().getComponentType();
+			context.offerLast(new JrankContext(d, obj));
 			for(int i = 0; i < size; i++) {
 				if(cmp == byte.class) ensureCapacity(1).put(Array.getByte(obj, i));
 				else if(cmp == char.class) ensureCapacity(2).putChar(Array.getChar(obj, i));

@@ -6,13 +6,15 @@ public class JrankContext {
 	private JrankClass type;
 	private Object object;
 	private JrankPutFields putFields;
+	private JrankGetFields getFields;
 	
 	private JrankContext() {}
 	
 	public JrankContext(JrankClass type, Object object) {
 		this.type = type;
 		this.object = object;
-		this.putFields = new JrankPutFields();
+		putFields = new JrankPutFields();
+		getFields = new JrankGetFields();
 	}
 
 	public JrankClass getType() {
@@ -25,5 +27,9 @@ public class JrankContext {
 	
 	public JrankPutFields getPutFields() {
 		return putFields;
+	}
+	
+	public JrankGetFields getGetFields() {
+		return getFields;
 	}
 }
