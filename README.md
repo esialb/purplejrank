@@ -24,7 +24,7 @@ The artifact itself:
     <dependency>
         <groupId>org.purplejrank</groupId>
         <artifactId>purplejrank</artifactId>
-        <version>0.0.1-SNAPSHOT</version>
+        <version>0.1-SNAPSHOT</version>
     </dependency>
 
 ## Why use Purple Jrank?
