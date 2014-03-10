@@ -2,7 +2,6 @@ package org.purplejrank;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
@@ -13,7 +12,7 @@ import org.junit.Test;
 
 public class NullsJrankInputTest {
 	public static class Missing implements Serializable {
-		
+		private static final long serialVersionUID = 0;
 	}
 	
 	private static class MissingMissingClassLoader extends ClassLoader {
