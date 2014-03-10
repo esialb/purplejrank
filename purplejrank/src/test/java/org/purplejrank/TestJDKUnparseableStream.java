@@ -17,7 +17,7 @@ public class TestJDKUnparseableStream {
 		public byte fail = 0x70;
 
 		private void writeObject(ObjectOutputStream out) throws IOException {
-			out.defaultWriteObject();
+			out.defaultWriteObject(); // written as raw stream metadata, not contained in any block
 		}
 
 		private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {

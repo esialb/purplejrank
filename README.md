@@ -28,10 +28,28 @@ The artifact itself:
 ### tl;dr
 Purple Jrank can deserialize streams that specify classes not found on the classpath.
 
-### boring details
+### Boring Details of Stream Corruption
 There exist bugs in the JDK serialization stream protocol that make it unparseable with zero knowledge of the classes.  Basically, if you don't have all the classes from the stream, you can't even parse it, let alone deserialize it.  The biggest culprit is **ObjectOutputStream**, which lets you omit the call to **defaultWriteObject()** if you have a **writeObject(ObjectOutputStream)** method.  If any class in the stream does this then the stream cannot be parsed without actually executing the equivalent **readObject(ObjectInputStream)** method from that class.  The JDK stream protocol specifies that calls to writeObject are preceded by the field data, outside of a data block.  Because **writeObject(ObjectOutputStream)** lets you omit the call to **defaultWriteObject()**, the stream can be corrupted.
 
 Purple Jrank properly writes headers and boundaries to fix this bug.  The output of Purple Jrank can be parsed with zero knowledge of the classes used to write the stream.  This makes it possible to handle missing classes in useful ways, such as replacing instances of missing classes with **null** while still being able to continue reading objects.
+
+### Stream Corruption Example
+The following class writes a corrupt stream, corrupt in that it cannot be parsed without knowledge of the implementation of **writeObject**, and that it is possible to read the stream totally incorrectly without any exceptions being thrown.
+
+    public static class A implements Serializable {
+        private static final long serialVersionUID = 0;
+
+        public byte fail = 0x70;
+
+        private void writeObject(ObjectOutputStream out) throws IOException {
+            out.defaultWriteObject(); // written as raw stream metadata, not contained in any block
+        }
+
+        private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
+            in.readObject(); // interprets the "fail" byte as a null object reference
+        }
+    }
+
 
 ## java.nio
 
