@@ -16,6 +16,8 @@ public class ProxyTest {
 		public String bar();
 	}
 	public static class IH implements InvocationHandler, Serializable {
+		private static final long serialVersionUID = 0;
+		
 		@Override
 		public Object invoke(Object proxy, Method method, Object[] args)
 				throws Throwable {
