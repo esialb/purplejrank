@@ -11,6 +11,7 @@ import java.util.Arrays;
 import java.util.Calendar;
 import java.util.List;
 import java.util.Properties;
+import java.util.Vector;
 
 import org.junit.Assert;
 import org.junit.Assume;
@@ -33,7 +34,8 @@ public class PurpleJrankTest implements Serializable {
 				Arrays.asList(1,1,1),
 				new PurpleJrankTest(null).new S(),
 				Calendar.getInstance(),
-				new Properties()
+				new Properties(),
+				new Vector<Object>()
 				);
 		List<Object[]> ret = new ArrayList<Object[]>(objs.size());
 		for(int i = 0; i < objs.size(); i++)
