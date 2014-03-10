@@ -51,6 +51,7 @@ public class CollectionsJrankInput extends PurpleJrankInput {
 	protected Object newOrdinaryObject(JrankClass desc) {
 		Map<String, Object> ret = new TreeMap<String, Object>();
 		ret.put("-class", desc.getName());
+		ret.put("-desc", desc);
 		return ret;
 	}
 	

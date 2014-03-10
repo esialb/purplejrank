@@ -5,6 +5,8 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
+import java.util.List;
+import java.util.Map;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -51,7 +53,7 @@ public class CollectionsJrankInputTest {
 	
 	@Test
 	public void testCollections() throws Exception {
-		Assert.assertEquals("{-class=Lorg.purplejrank.mods.CollectionsJrankInputTest$Missing;, i=1}", cycle(new Missing()).toString());
-		Assert.assertEquals("[null, null, null, null]", cycle(new Missing[4]).toString());
+		Assert.assertTrue(cycle(new Missing()) instanceof Map<?, ?>);
+		Assert.assertTrue(cycle(new Missing[4]) instanceof List<?>);
 	}
 }
