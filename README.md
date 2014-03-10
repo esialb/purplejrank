@@ -1,4 +1,7 @@
-# Purple Jrank: Relaxed Serialization
+# Purple Jrank
+_Fault tolerant serialization mechanism with a stream protocol that can be parsed unambiguously with zero knowledge of class implementation._
+
+## Reliable Relaxed Serialization
 Purple Jrank is a more robust way to serialize objects than the JDK's **ObjectOutputStream** and **ObjectInputStream**.  It aims to be fully feature-compatible with JDK serialization, but uses a different stream protocol that more clearly delineates data boundaries, allowing streams to be parsed with zero knowledge of the class implementations.  Purple Jrank takes advantage of this zero-knowledge parseability to recover and continue deserializing streams that, if written with the JDK's **ObjectOutputStream**, would be unreadable or ambiguous.  Streams written by PurpleJrank are unambiguous.
 
 Purple Jrank means reliable and flexible serialization even in the face of changing (or even missing) classes.
