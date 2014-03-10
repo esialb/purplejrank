@@ -11,7 +11,6 @@ import java.io.StreamCorruptedException;
 
 import org.junit.Assert;
 import org.junit.Test;
-import org.purplejrank.reflect.SerializableInstantiator;
 
 public class TestJDKUnparseableStream {
 	/**

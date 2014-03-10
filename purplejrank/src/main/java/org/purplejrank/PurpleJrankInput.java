@@ -28,14 +28,11 @@ import java.util.NavigableMap;
 import java.util.Set;
 import java.util.TreeMap;
 
+import org.objenesis.ObjenesisHelper;
+import org.objenesis.instantiator.basic.ConstructorInstantiator;
 import org.purplejrank.io.StreamReadableByteChannel;
-import org.purplejrank.reflect.ConstructorInstantiator;
 import org.purplejrank.reflect.FieldCache;
-import org.purplejrank.reflect.Instantiator;
-import org.purplejrank.reflect.InstantiatorCache;
 import org.purplejrank.reflect.MethodCache;
-import org.purplejrank.reflect.ProxyInstantiator;
-import org.purplejrank.reflect.SerializableInstantiator;
 
 /**
  * Extension of {@link ObjectInputStream} with a protocol based on {@link ObjectInputStream},
@@ -48,27 +45,26 @@ public class PurpleJrankInput extends ObjectInputStream implements ObjectInput {
 	protected ReadableByteChannel in;
 	protected ByteBuffer buf = ByteBuffer.allocateDirect(JrankConstants.MAX_BLOCK_SIZE);
 	protected int blockEnd = 0;
-	
+
 	protected ClassLoader cl;
 	protected FieldCache fieldCache = new FieldCache();
 	protected MethodCache methodCache = new MethodCache();
-	protected InstantiatorCache instantiatorCache = new InstantiatorCache();
 	protected List<Object> wired = new ArrayList<Object>();
 	protected Deque<JrankContext> context = new ArrayDeque<JrankContext>(Arrays.asList(JrankContext.NO_CONTEXT));
 	protected NavigableMap<Integer, List<ObjectInputValidation>> validation = new TreeMap<Integer, List<ObjectInputValidation>>();
-	
+
 	public PurpleJrankInput(InputStream in) throws IOException {
 		this(in, PurpleJrankInput.class.getClassLoader());
 	}
-	
+
 	public PurpleJrankInput(InputStream in, ClassLoader cl) throws IOException {
 		this(new StreamReadableByteChannel(in), cl);
 	}
-	
+
 	public PurpleJrankInput(ReadableByteChannel in) throws IOException {
 		this(in, PurpleJrankInput.class.getClassLoader());
 	}
-	
+
 	public PurpleJrankInput(ReadableByteChannel in, ClassLoader cl) throws IOException {
 		this.in = in;
 		this.cl = cl;
@@ -81,16 +77,16 @@ public class PurpleJrankInput extends ObjectInputStream implements ObjectInput {
 		if(version != JrankConstants.VERSION)
 			throw new JrankStreamException("invalid version");
 	}
-	
+
 	protected PurpleJrankInput ensureOpen() throws IOException {
 		if(!in.isOpen()) throw new JrankStreamException("channel closed");
 		return this;
 	}
-	
+
 	protected byte peek() throws IOException {
 		return ensureOpen().ensureAvailable(1).get(buf.position());
 	}
-	
+
 	protected PurpleJrankInput setBlockMode(boolean blockMode) throws IOException {
 		ensureOpen();
 		if(blockEnd > 0 && blockMode)
@@ -108,7 +104,7 @@ public class PurpleJrankInput extends ObjectInputStream implements ObjectInput {
 		}
 		return this;
 	}
-	
+
 	protected ByteBuffer ensureAvailable(int available) throws IOException {
 		if(buf.remaining() < available) {
 			int r = buf.remaining();
@@ -122,11 +118,11 @@ public class PurpleJrankInput extends ObjectInputStream implements ObjectInput {
 		}
 		return buf;
 	}
-	
+
 	protected int readEscapedInt() throws IOException {
 		return readEscapedInt(0);
 	}
-	
+
 	private int readEscapedInt(int shift) throws IOException {
 		ensureOpen().ensureAvailable(1);
 		int v = 0xff & buf.get();
@@ -142,7 +138,7 @@ public class PurpleJrankInput extends ObjectInputStream implements ObjectInput {
 	protected long readEscapedLong() throws IOException {
 		return readEscapedLong(0);
 	}
-	
+
 	private long readEscapedLong(int shift) throws IOException {
 		ensureOpen().ensureAvailable(1);
 		long v = 0xff & buf.get();
@@ -229,7 +225,7 @@ public class PurpleJrankInput extends ObjectInputStream implements ObjectInput {
 	public String readUTF() throws IOException {
 		return readUTF(true);
 	}
-	
+
 	protected String readUTF(boolean blockMode) throws IOException {
 		ensureOpen().setBlockMode(blockMode);
 		StringBuilder sb = new StringBuilder();
@@ -259,25 +255,25 @@ public class PurpleJrankInput extends ObjectInputStream implements ObjectInput {
 			}
 		}
 	}
-	
+
 	@SuppressWarnings("unchecked")
 	protected Object readObject0(boolean shared) throws IOException, ClassNotFoundException {
 		ensureOpen().setBlockMode(false);
-		
+
 		Object obj = null;
 		int handle = -1;
-		
+
 		switch(ensureAvailable(1).get()) {
 		case JrankConstants.NULL:
 			return null;
-			
+
 		case JrankConstants.REFERENCE:
 			handle = readEscapedInt();
 			if(shared)
 				return wired.get(handle);
 			obj = clone(wired.get(handle));
 			break;
-			
+
 		case JrankConstants.ARRAY:
 			JrankClass d = readClassDesc();
 			int size = setBlockMode(false).readEscapedInt();
@@ -289,7 +285,7 @@ public class PurpleJrankInput extends ObjectInputStream implements ObjectInput {
 			context.offerLast(new JrankContext(d, obj));
 			for(int i = 0; i < size; i++) {
 				Object v;
-				
+
 				if(cmp == byte.class) v = ensureAvailable(1).get();
 				else if(cmp == char.class) v = ensureAvailable(2).getChar();
 				else if(cmp == double.class) v = ensureAvailable(8).getDouble();
@@ -301,30 +297,30 @@ public class PurpleJrankInput extends ObjectInputStream implements ObjectInput {
 				else v = readObject0(true);
 
 				setArrayElement(obj, i, v);
-				
+
 				setBlockMode(false);
 			}
 			context.pollLast();
 			break;
-			
+
 		case JrankConstants.STRING:
 			obj = readUTF(false);
 			wired.add(obj);
 			break;
-			
+
 		case JrankConstants.ENUM:
 			d = readClassDesc();
 			wired.add(obj);
 			String name = (String) readObject0(true);
 			obj = Enum.valueOf(d.getType().asSubclass(Enum.class), name);
 			break;
-			
+
 		case JrankConstants.OBJECT:
 			d = readClassDesc();
 			obj = newOrdinaryObject(d);
 			handle = wired.size();
 			wired.add(obj);
-			
+
 			if(d.getFlags() == JrankConstants.SC_WRITE_EXTERNAL) {
 				context.offerLast(new JrankContext(d, obj));
 				((Externalizable) obj).readExternal(this);
@@ -374,7 +370,7 @@ public class PurpleJrankInput extends ObjectInputStream implements ObjectInput {
 					unrestored = unrestored.getSuperclass();
 				}
 			}
-			
+
 			Method m = findReadResolve(obj);
 			if(m != null) {
 				try {
@@ -384,16 +380,16 @@ public class PurpleJrankInput extends ObjectInputStream implements ObjectInput {
 					throw new JrankStreamException(e);
 				}
 			}
-			
+
 			break;
-			
+
 		default:
 			throw new StreamCorruptedException();
 		}
-		
+
 		return obj;
 	}
-	
+
 	protected Object newArray(JrankClass desc, int size) {
 		Class<?> cmp;
 		if(desc.getType() != null) {
@@ -402,13 +398,13 @@ public class PurpleJrankInput extends ObjectInputStream implements ObjectInput {
 		}
 		return null;
 	}
-	
+
 	protected void setArrayElement(Object array, int index, Object value) {
 		if(array == null)
 			return;
 		Array.set(array, index, value);
 	}
-	
+
 	protected void skipOptionalData() throws IOException, ClassNotFoundException {
 		setBlockMode(false);
 		for(byte b = peek(); b != JrankConstants.WALL; b = peek()) {
@@ -425,26 +421,14 @@ public class PurpleJrankInput extends ObjectInputStream implements ObjectInput {
 			setBlockMode(false);
 		}
 	}
-	
+
 	protected Object clone(Object obj) throws IOException {
-		Instantiator i;
 		Class<?> cls = obj.getClass();
-		try {
-			if(Proxy.isProxyClass(cls))
-				i = new ProxyInstantiator(cls);
-			else if(Externalizable.class.isAssignableFrom(cls))
-				i = new ConstructorInstantiator(cls);
-			else
-				i = new SerializableInstantiator(cls);
-		} catch(NoSuchMethodException e) {
-			throw new JrankStreamException(e);
-		}
 		Object clone;
-		try {
-			clone = i.newInstance();
-		} catch(Exception e) {
-			throw new JrankStreamException(e);
-		}
+		if(Externalizable.class.isAssignableFrom(cls))
+			clone = new ConstructorInstantiator(cls).newInstance();
+		else
+			clone = ObjenesisHelper.newInstance(cls);
 		for(; cls != null; cls = cls.getSuperclass()) {
 			Field[] fields = fieldCache.get(cls);
 			for(Field f : fields) {
@@ -459,41 +443,41 @@ public class PurpleJrankInput extends ObjectInputStream implements ObjectInput {
 		}
 		return clone;
 	}
-	
+
 	protected JrankClass readClassDesc() throws IOException, ClassNotFoundException {
 		ensureOpen().setBlockMode(false).ensureAvailable(1);
-		
+
 		JrankClass d;
-		
+
 		switch(buf.get()) {
 		case JrankConstants.NULL:
 			return null;
-			
+
 		case JrankConstants.REFERENCE:
 			int handle = readEscapedInt();
 			return (JrankClass) wired.get(handle);
-			
+
 		case JrankConstants.PROXYCLASSDESC:
 			d = new JrankClass();
 			wired.add(d);
-			
+
 			int nifc = readEscapedInt();
 			String[] ifcs = new String[nifc];
 			for(int i = 0; i < nifc; i++)
 				ifcs[i] = readUTF(false);
-			
+
 			d.setProxy(true);
 			d.setProxyInterfaceNames(ifcs);
 			d.setFields(new Field[0]);
 			d.setFieldNames(new String[0]);
 			d.setFieldTypes(new String[0]);
-			
+
 			d.setType(resolveProxyClass(d.getProxyInterfaceNames()));
-			
+
 			d.setParent(readClassDesc());
 
 			return d;
-			
+
 		case JrankConstants.CLASSDESC:
 			String name = readUTF(false);
 			long serialVersion = readEscapedLong();
@@ -508,10 +492,10 @@ public class PurpleJrankInput extends ObjectInputStream implements ObjectInput {
 				if(t == '[' || t == 'L')
 					fieldTypes[i] += readUTF(false);
 			}
-			
+
 			d = new JrankClass();
 			wired.add(d);
-			
+
 			d.setProxy(false);
 			d.setName(name);
 			d.setSerialVersion(serialVersion);
@@ -536,12 +520,12 @@ public class PurpleJrankInput extends ObjectInputStream implements ObjectInput {
 			}
 			fields = Arrays.copyOf(fields, fc);
 			d.setFields(fields);
-			
+
 			d.setParent(readClassDesc());
-			
+
 			return d;
 		}
-		
+
 		throw new StreamCorruptedException();
 	}
 
@@ -558,7 +542,7 @@ public class PurpleJrankInput extends ObjectInputStream implements ObjectInput {
 		}
 		return null;
 	}
-	
+
 	protected Class<?> resolveClass(JrankClass desc) throws IOException, ClassNotFoundException {
 		Class<?> cls = resolveClass(desc.getName());
 		if(cls == null)
@@ -566,15 +550,15 @@ public class PurpleJrankInput extends ObjectInputStream implements ObjectInput {
 		checkSerialVersion(desc, cls);
 		return cls;
 	}
-	
+
 	protected void checkSerialVersion(JrankClass desc, Class<?> cls) throws ClassNotFoundException {
 		long clsv = ObjectStreamClass.lookupAny(cls).getSerialVersionUID();
 		if(clsv != desc.getSerialVersion())
 			throw new ClassNotFoundException("Mismatched serialVersionUID: stream:" + desc.getSerialVersion() + " local:" + clsv);
 	}
-	
+
 	protected Class<?> resolveClass(String name) throws IOException,
-			ClassNotFoundException {
+	ClassNotFoundException {
 		if("B".equals(name)) return byte.class;
 		if("C".equals(name)) return char.class;
 		if("D".equals(name)) return double.class;
@@ -593,15 +577,15 @@ public class PurpleJrankInput extends ObjectInputStream implements ObjectInput {
 		name = name.substring(1, name.length() - 1).replaceAll("/", ".");
 		return resolveOrdinaryClass(name);
 	}
-	
+
 	protected Class<?> resolveArrayClass(Class<?> baseComponentType, int depth) {
 		return Array.newInstance(baseComponentType, new int[depth]).getClass();
 	}
-	
+
 	protected Class<?> resolveOrdinaryClass(String name) throws ClassNotFoundException {
 		return cl.loadClass(name);
 	}
-	
+
 	@Override
 	protected Class<?> resolveProxyClass(String[] interfaces)
 			throws IOException, ClassNotFoundException {
@@ -610,18 +594,16 @@ public class PurpleJrankInput extends ObjectInputStream implements ObjectInput {
 			ifcs[i] = cl.loadClass(interfaces[i]);
 		return Proxy.getProxyClass(cl, ifcs);
 	}
-	
+
 	protected Object newOrdinaryObject(JrankClass desc) throws IOException, ClassNotFoundException {
 		if(desc.getType() == null)
 			return null;
-		
-		try {
-			return instantiatorCache.get(desc.getType(), desc.getFlags()).newInstance();
-		} catch(NoSuchMethodException e) {
-			throw new JrankStreamException(e);
-		}
+
+		if(Externalizable.class.isAssignableFrom(desc.getType()))
+			return new ConstructorInstantiator(desc.getType()).newInstance();
+		return ObjenesisHelper.newInstance(desc.getType());
 	}
-	
+
 	@Override
 	public int read() throws IOException {
 		return 0xff & (int) ensureOpen().setBlockMode(true).ensureAvailable(1).get();
@@ -686,7 +668,7 @@ public class PurpleJrankInput extends ObjectInputStream implements ObjectInput {
 			throw new JrankStreamException(e);
 		}
 	}
-	
+
 	@Override
 	public JrankGetFields readFields() throws IOException, ClassNotFoundException {
 		JrankContext ctx = context.peekLast();
@@ -730,7 +712,7 @@ public class PurpleJrankInput extends ObjectInputStream implements ObjectInput {
 	@Deprecated
 	@Override
 	protected final Class<?> resolveClass(ObjectStreamClass desc) throws IOException,
-			ClassNotFoundException {
+	ClassNotFoundException {
 		throw new UnsupportedOperationException();
 	}
 
@@ -750,17 +732,17 @@ public class PurpleJrankInput extends ObjectInputStream implements ObjectInput {
 	@Deprecated
 	@Override
 	protected final void readStreamHeader() throws IOException,
-			StreamCorruptedException {
+	StreamCorruptedException {
 		throw new UnsupportedOperationException();
 	}
 
 	@Deprecated
 	@Override
 	protected final ObjectStreamClass readClassDescriptor() throws IOException,
-			ClassNotFoundException {
+	ClassNotFoundException {
 		throw new UnsupportedOperationException();
 	}
 
-	
-	
+
+
 }
