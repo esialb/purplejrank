@@ -25,8 +25,12 @@ public class MethodCache {
 
 	public Method get(Class<?> cls, String name, Class<?>... parameterTypes) throws NoSuchMethodException {
 		String cn = cname(name, parameterTypes);
-		if(cache.containsKey(cls) && cache.get(cls).containsKey(cn))
-			return cache.get(cls).get(cn);
+		if(cache.containsKey(cls) && cache.get(cls).containsKey(cn)) {
+			Method m = cache.get(cls).get(cn);
+			if(m == null)
+				throw new NoSuchMethodException(cn);
+			return m;
+		}
 		if(!cache.containsKey(cls))
 			cache.put(cls, new HashMap<String, Method>());
 		if(!cache.get(cls).containsKey(cn)) {

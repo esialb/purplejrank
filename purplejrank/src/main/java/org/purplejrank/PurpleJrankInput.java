@@ -20,8 +20,10 @@ import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Deque;
+import java.util.HashSet;
 import java.util.List;
 import java.util.NavigableMap;
+import java.util.Set;
 import java.util.TreeMap;
 
 import org.objenesis.ObjenesisHelper;
@@ -304,11 +306,15 @@ public class PurpleJrankInput extends ObjectInputStream implements ObjectInput {
 				((Externalizable) obj).readExternal(this);
 				context.pollLast();
 			} else {
+				Set<Class<?>> restoredClasses = new HashSet<Class<?>>();
 				for(JrankClass t = d; t != null; t = t.getParent()) {
 					context.offerLast(new JrankContext(t, obj));
 					if(obj == null)
 						skipOptionalData();
+					if(t.getType() == null || !t.getType().isInstance(obj))
+						skipOptionalData();
 					else if(t.getFlags() == JrankConstants.SC_WRITE_OBJECT) {
+						restoredClasses.add(t.getType());
 						try {
 							Method m = methodCache.get(t.getType(), "readObject", ObjectInputStream.class);
 							m.invoke(obj, this);
@@ -317,12 +323,27 @@ public class PurpleJrankInput extends ObjectInputStream implements ObjectInput {
 							throw new IOException(ex);
 						}
 						skipOptionalData();
-					} else
+					} else {
+						restoredClasses.add(t.getType());
 						defaultReadObject();
+					}
 					setBlockMode(false).ensureAvailable(1);
 					if(buf.get() != JrankConstants.WALL)
 						throw new StreamCorruptedException();
 					context.pollLast();
+				}
+				Class<?> unrestored = obj != null ? obj.getClass() : null;
+				while(unrestored != null) {
+					if(!restoredClasses.contains(unrestored)) {
+						try {
+							Method m = methodCache.get(unrestored, "readObjectNoData");
+							m.invoke(obj);
+						} catch(NoSuchMethodException e) {
+						} catch(Exception ex) {
+							throw new IOException(ex);
+						}
+					}
+					unrestored = unrestored.getSuperclass();
 				}
 			}
 			
