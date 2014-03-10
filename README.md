@@ -36,19 +36,28 @@ Purple Jrank properly writes headers and boundaries to fix this bug.  The output
 ### Stream Corruption Example
 The following class writes a corrupt stream, corrupt in that it cannot be parsed without knowledge of the implementation of **writeObject**, and that it is possible to read the stream totally incorrectly without any exceptions being thrown.
 
-    public static class A implements Serializable {
-        private static final long serialVersionUID = 0;
+	public static class A implements Serializable {
+		private static final long serialVersionUID = 0;
 
-        public byte fail = 0x70;
+		public int fail = 0x70707070;
 
-        private void writeObject(ObjectOutputStream out) throws IOException {
-            out.defaultWriteObject(); // written as raw stream metadata, not contained in any block
-        }
+		/*
+		 * A single field, an int, should be written to the stream
+		 */
+		private void writeObject(ObjectOutputStream out) throws IOException {
+			out.defaultWriteObject(); // written as raw stream metadata, not contained in any block
+		}
 
-        private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
-            in.readObject(); // interprets the "fail" byte as a null object reference
-        }
-    }
+		/*
+		 * Because of ambiguity, the JDK allows the int to be interpreted as four nulls in a row
+		 */
+		private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
+			in.readObject(); // interprets the "fail" byte as a null object reference
+			in.readObject();
+			in.readObject();
+			in.readObject();
+		}
+	}
 
 
 ## java.nio
