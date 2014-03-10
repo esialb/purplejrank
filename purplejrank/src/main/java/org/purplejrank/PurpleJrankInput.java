@@ -7,6 +7,7 @@ import java.io.NotActiveException;
 import java.io.ObjectInput;
 import java.io.ObjectInputStream;
 import java.io.ObjectInputValidation;
+import java.io.ObjectStreamClass;
 import java.io.StreamCorruptedException;
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
@@ -19,7 +20,11 @@ import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Deque;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.NavigableMap;
+import java.util.TreeMap;
 
 import org.objenesis.ObjenesisHelper;
 import org.objenesis.instantiator.basic.ConstructorInstantiator;
@@ -35,6 +40,7 @@ public class PurpleJrankInput extends ObjectInputStream implements ObjectInput {
 	private ClassLoader cl = PurpleJrankInput.class.getClassLoader();
 	private List<Object> wired = new ArrayList<Object>();
 	private Deque<JrankContext> context = new ArrayDeque<JrankContext>(Arrays.asList(JrankContext.NO_CONTEXT));
+	private NavigableMap<Integer, List<ObjectInputValidation>> validation = new TreeMap<Integer, List<ObjectInputValidation>>();
 	
 	public PurpleJrankInput(ReadableByteChannel in) throws IOException {
 		this.in = in;
@@ -191,7 +197,17 @@ public class PurpleJrankInput extends ObjectInputStream implements ObjectInput {
 
 	@Override
 	protected Object readObjectOverride() throws ClassNotFoundException, IOException {
-		return readObject0(true);
+		try {
+			return readObject0(true);
+		} finally {
+			if(context.size() == 1) {
+				for(int prio : validation.descendingKeySet()) {
+					for(ObjectInputValidation v : validation.get(prio))
+						v.validateObject();
+				}
+				validation.clear();
+			}
+		}
 	}
 	
 	@SuppressWarnings("unchecked")
@@ -456,6 +472,9 @@ public class PurpleJrankInput extends ObjectInputStream implements ObjectInput {
 	
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	protected Object instantiate(JrankClass desc) {
+		if(desc.getType() == null)
+			return null;
+		
 		if(desc.getFlags() == JrankConstants.SC_WRITE_EXTERNAL)
 			return new ConstructorInstantiator(desc.getType()).newInstance();
 		return new SerializingInstantiatorStrategy().newInstantiatorOf(desc.getType()).newInstance();
@@ -557,8 +576,40 @@ public class PurpleJrankInput extends ObjectInputStream implements ObjectInput {
 	@Override
 	public void registerValidation(ObjectInputValidation obj, int prio)
 			throws NotActiveException, InvalidObjectException {
-		// TODO Auto-generated method stub
+		if(!validation.containsKey(prio))
+			validation.put(prio, new ArrayList<ObjectInputValidation>());
+		validation.get(prio).add(obj);
+	}
+
+	@Override
+	protected final Class<?> resolveClass(ObjectStreamClass desc) throws IOException,
+			ClassNotFoundException {
 		throw new UnsupportedOperationException();
 	}
 
+	@Override
+	protected final Object resolveObject(Object obj) throws IOException {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	protected final boolean enableResolveObject(boolean enable)
+			throws SecurityException {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	protected final void readStreamHeader() throws IOException,
+			StreamCorruptedException {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	protected final ObjectStreamClass readClassDescriptor() throws IOException,
+			ClassNotFoundException {
+		throw new UnsupportedOperationException();
+	}
+
+	
+	
 }
