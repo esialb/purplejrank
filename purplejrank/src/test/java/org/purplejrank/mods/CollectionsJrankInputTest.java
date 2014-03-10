@@ -44,7 +44,7 @@ public class CollectionsJrankInputTest {
 	}
 	
 	@Test
-	public void testMissingAsNull() throws Exception {
+	public void testCollections() throws Exception {
 		ByteArrayOutputStream bout = new ByteArrayOutputStream();
 		try {
 			StreamWritableByteChannel ch = new StreamWritableByteChannel(bout);
@@ -62,7 +62,7 @@ public class CollectionsJrankInputTest {
 		StreamReadableByteChannel ch = new StreamReadableByteChannel(bin);
 		ObjectInputStream in = new CollectionsJrankInput(ch, new MissingMissingClassLoader());
 
-		Assert.assertEquals("{-class=Lorg.purplejrank.CollectionsJrankInputTest$Missing;, i=1}", in.readObject().toString());
+		Assert.assertEquals("{-class=Lorg.purplejrank.mods.CollectionsJrankInputTest$Missing;, i=1}", in.readObject().toString());
 		Assert.assertEquals("[null, null, null, null]", in.readObject().toString());
 		
 		in.close();
