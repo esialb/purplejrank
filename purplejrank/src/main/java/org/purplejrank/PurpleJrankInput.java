@@ -36,7 +36,7 @@ public class PurpleJrankInput extends ObjectInputStream implements ObjectInput {
 
 	protected boolean isClosed = false;
 	protected ReadableByteChannel in;
-	protected ByteBuffer buf = ByteBuffer.allocate(JrankConstants.MAX_BLOCK_SIZE);
+	protected ByteBuffer buf = ByteBuffer.allocateDirect(JrankConstants.MAX_BLOCK_SIZE);
 	protected int blockEnd = 0;
 	
 	protected ClassLoader cl;
