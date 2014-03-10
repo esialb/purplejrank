@@ -18,7 +18,9 @@ public class ReadResolveTest {
 		public C c;
 		
 		private Object readResolve() {
-			return new B();
+			B b = new B();
+			b.c = c;
+			return b;
 		}
 	}
 	public static class C implements Serializable {
@@ -36,7 +38,7 @@ public class ReadResolveTest {
 		B b = new B();
 		C c = new C();
 		
-		b.c = c; c.b = b;
+		b.c = c; c.b = b; // cyclic references
 		
 		Object[] bc = new Object[] {b, c};
 		
@@ -45,7 +47,7 @@ public class ReadResolveTest {
 		b = (B) bc[0];
 		c = (C) bc[1];
 		
-		Assert.assertNull(b.c);
-		Assert.assertNotNull(c.b.c);
+		Assert.assertNotSame(b, c.b); // no longer cyclic references
+		Assert.assertSame(c, b.c);
 	}
 }
