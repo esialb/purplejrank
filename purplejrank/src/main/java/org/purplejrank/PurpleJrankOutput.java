@@ -412,12 +412,10 @@ public class PurpleJrankOutput extends ObjectOutputStream implements ObjectOutpu
 		if(ctx == JrankContext.NO_CONTEXT)
 			throw new NotActiveException();
 		setBlockMode(false).ensureCapacity(1).put(JrankConstants.FIELDS);
-//		for(String fn : ctx.getType().getFieldNames()) {
 		for(int i = 0; i < ctx.getType().getFieldNames().length; i++) {
 			String name = ctx.getType().getFieldNames()[i];
 			Class<?> fc = ctx.getType().getFieldClasses()[i];
 			Object val = ctx.getPutFields().get(name);
-			System.out.println(ctx.getType() + ":" + name + " " + fc + " " + val);
 			try {
 				if(fc == byte.class) writeByte((Byte) val);
 				else if(fc == char.class) writeChar((Character) val);
