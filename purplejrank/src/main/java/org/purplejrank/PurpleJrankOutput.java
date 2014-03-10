@@ -28,6 +28,7 @@ public class PurpleJrankOutput extends ObjectOutputStream implements ObjectOutpu
 	protected ByteBuffer blockHeader = ByteBuffer.allocateDirect(5);
 	
 	protected FieldCache fieldCache = new FieldCache();
+	protected MethodCache methodCache = new MethodCache();
 	protected Map<Object, Integer> wired = new IdentityHashMap<Object, Integer>();
 	protected Map<Class<?>, JrankClass> classdesc = new IdentityHashMap<Class<?>, JrankClass>();
 	protected Deque<JrankContext> context = new ArrayDeque<JrankContext>(Arrays.asList(JrankContext.NO_CONTEXT));
@@ -238,8 +239,7 @@ public class PurpleJrankOutput extends ObjectOutputStream implements ObjectOutpu
 				context.offerLast(new JrankContext(t, obj));
 				if(t.getFlags() == JrankConstants.SC_WRITE_OBJECT) {
 					try {
-						Method m = t.getType().getDeclaredMethod("writeObject", ObjectOutputStream.class);
-						m.setAccessible(true);
+						Method m = methodCache.get(t.getType(), "writeObject", ObjectOutputStream.class);
 						m.invoke(obj, this);
 					} catch(Exception e) {
 						throw new IOException(e);
@@ -300,8 +300,7 @@ public class PurpleJrankOutput extends ObjectOutputStream implements ObjectOutpu
 		Class<?> cls = obj.getClass();
 		while(cls != null) {
 			try {
-				Method m = cls.getDeclaredMethod("writeReplace");
-				m.setAccessible(true);
+				Method m = methodCache.get(cls, "writeReplace");
 				return m;
 			} catch(NoSuchMethodException e) {}
 			cls = cls.getSuperclass();

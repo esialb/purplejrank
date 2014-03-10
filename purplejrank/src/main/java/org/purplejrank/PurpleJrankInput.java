@@ -37,6 +37,7 @@ public class PurpleJrankInput extends ObjectInputStream implements ObjectInput {
 	
 	protected ClassLoader cl;
 	protected FieldCache fieldCache = new FieldCache();
+	protected MethodCache methodCache = new MethodCache();
 	protected List<Object> wired = new ArrayList<Object>();
 	protected Deque<JrankContext> context = new ArrayDeque<JrankContext>(Arrays.asList(JrankContext.NO_CONTEXT));
 	protected NavigableMap<Integer, List<ObjectInputValidation>> validation = new TreeMap<Integer, List<ObjectInputValidation>>();
@@ -307,8 +308,7 @@ public class PurpleJrankInput extends ObjectInputStream implements ObjectInput {
 						skipOptionalData();
 					else if(t.getFlags() == JrankConstants.SC_WRITE_OBJECT) {
 						try {
-							Method m = t.getType().getDeclaredMethod("readObject", ObjectInputStream.class);
-							m.setAccessible(true);
+							Method m = methodCache.get(t.getType(), "readObject", ObjectInputStream.class);
 							m.invoke(obj, this);
 						} catch(NoSuchMethodException e) {
 						} catch(Exception ex) {
@@ -478,8 +478,7 @@ public class PurpleJrankInput extends ObjectInputStream implements ObjectInput {
 		Class<?> cls = obj.getClass();
 		while(cls != null) {
 			try {
-				Method m = cls.getDeclaredMethod("readResolve");
-				m.setAccessible(true);
+				Method m = methodCache.get(cls, "readResolve");
 				return m;
 			} catch(NoSuchMethodException e) {}
 			cls = cls.getSuperclass();
