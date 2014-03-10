@@ -29,7 +29,9 @@ public class CollectionsJrankInput extends PurpleJrankInput {
 	
 	@Override
 	protected Object newOrdinaryObject(JrankClass desc) {
-		return new TreeMap<String, Object>();
+		Map<String, Object> ret = new TreeMap<String, Object>();
+		ret.put("-class", desc.getName());
+		return ret;
 	}
 	
 	@Override

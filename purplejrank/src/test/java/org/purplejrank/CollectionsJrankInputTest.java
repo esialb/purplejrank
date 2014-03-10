@@ -57,7 +57,7 @@ public class CollectionsJrankInputTest {
 		StreamReadableByteChannel ch = new StreamReadableByteChannel(bin);
 		ObjectInputStream in = new CollectionsJrankInput(ch, new MissingMissingClassLoader());
 
-		Assert.assertEquals("{i=1}", in.readObject().toString());
+		Assert.assertEquals("{-class=Lorg.purplejrank.CollectionsJrankInputTest$Missing;, i=1}", in.readObject().toString());
 		Assert.assertEquals("[null, null, null, null]", in.readObject().toString());
 		
 		in.close();
