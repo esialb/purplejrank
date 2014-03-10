@@ -15,8 +15,6 @@ import org.junit.Assert;
 import org.junit.Assume;
 import org.junit.Test;
 import org.purplejrank.PurpleJrankOutput;
-import org.purplejrank.io.StreamReadableByteChannel;
-import org.purplejrank.io.StreamWritableByteChannel;
 import org.purplejrank.mods.NullsJrankInput;
 
 public class NullsJrankInputTest {
@@ -57,8 +55,7 @@ public class NullsJrankInputTest {
 	public void testMissingAsNull() throws Exception {
 		ByteArrayOutputStream bout = new ByteArrayOutputStream();
 		try {
-			StreamWritableByteChannel ch = new StreamWritableByteChannel(bout);
-			ObjectOutputStream out = new PurpleJrankOutput(ch);
+			ObjectOutputStream out = new PurpleJrankOutput(bout);
 			Missing m = new Missing();
 			out.writeObject(m);
 			out.writeObject(m.counter);
@@ -70,8 +67,7 @@ public class NullsJrankInputTest {
 		byte[] buf = bout.toByteArray();
 
 		ByteArrayInputStream bin = new ByteArrayInputStream(buf);
-		StreamReadableByteChannel ch = new StreamReadableByteChannel(bin);
-		ObjectInputStream in = new NullsJrankInput(ch, new MissingMissingClassLoader());
+		ObjectInputStream in = new NullsJrankInput(bin, new MissingMissingClassLoader());
 
 		Assert.assertNull(in.readObject());;
 		Assert.assertTrue(in.readUnshared() instanceof Counter);
