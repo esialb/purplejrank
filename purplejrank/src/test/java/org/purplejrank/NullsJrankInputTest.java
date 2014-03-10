@@ -37,6 +37,7 @@ public class NullsJrankInputTest {
 			StreamWritableByteChannel ch = new StreamWritableByteChannel(bout);
 			ObjectOutputStream out = new PurpleJrankOutput(ch);
 			out.writeObject(new Missing());
+			out.writeObject(new Missing[0]);
 			out.close();
 		} catch(Exception e) {
 			Assume.assumeNoException(e);;
@@ -47,9 +48,10 @@ public class NullsJrankInputTest {
 		ByteArrayInputStream bin = new ByteArrayInputStream(buf);
 		StreamReadableByteChannel ch = new StreamReadableByteChannel(bin);
 		ObjectInputStream in = new NullsJrankInput(ch, new MissingMissingClassLoader());
-		Object actual = in.readObject();
-		in.close();
-		Assert.assertNull(actual);;
 
+		Assert.assertNull(in.readObject());;
+		Assert.assertNull(in.readObject());;
+
+		in.close();
 	}
 }

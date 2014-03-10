@@ -236,8 +236,11 @@ public class PurpleJrankInput extends ObjectInputStream implements ObjectInput {
 		case JrankConstants.ARRAY:
 			JrankClass d = readClassDesc();
 			int size = setBlockMode(false).readEscapedInt();
-			Class<?> cmp = d.getType().getComponentType();
-			obj = Array.newInstance(cmp, size);
+			Class<?> cmp = null;
+			if(d.getType() != null) {
+				cmp = d.getType().getComponentType();
+				obj = Array.newInstance(cmp, size);
+			}
 			wired.add(obj);
 			context.offerLast(new JrankContext(d, obj));
 			for(int i = 0; i < size; i++) {
@@ -461,6 +464,8 @@ public class PurpleJrankInput extends ObjectInputStream implements ObjectInput {
 		if("Z".equals(name)) return boolean.class;
 		if(name.startsWith("[")) {
 			Class<?> c = resolveClass(name.replaceAll("\\[", ""));
+			if(c == null)
+				return null;
 			int depth = name.replaceAll("[^\\[]", "").length();
 			return Array.newInstance(c, new int[depth]).getClass();
 		}
