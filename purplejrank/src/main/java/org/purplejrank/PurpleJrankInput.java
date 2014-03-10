@@ -309,6 +309,7 @@ public class PurpleJrankInput extends ObjectInputStream implements ObjectInput {
 							Method m = t.getType().getDeclaredMethod("readObject", ObjectInputStream.class);
 							m.setAccessible(true);
 							m.invoke(obj, this);
+						} catch(NoSuchMethodException e) {
 						} catch(Exception ex) {
 							throw new IOException(ex);
 						}
