@@ -5,6 +5,8 @@ import java.io.ByteArrayOutputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
+import java.nio.ByteBuffer;
+import java.nio.channels.ReadableByteChannel;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -16,6 +18,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
+import org.purplejrank.io.ByteBufferByteChannel;
 import org.purplejrank.io.StreamReadableByteChannel;
 import org.purplejrank.io.StreamWritableByteChannel;
 
@@ -97,8 +100,9 @@ public class PurpleJrankTest implements Serializable {
 		}
 */
 		
-		ByteArrayInputStream bin = new ByteArrayInputStream(buf);
-		StreamReadableByteChannel ch = new StreamReadableByteChannel(bin);
+//		ByteArrayInputStream bin = new ByteArrayInputStream(buf);
+//		StreamReadableByteChannel ch = new StreamReadableByteChannel(bin);
+		ReadableByteChannel ch = new ByteBufferByteChannel(ByteBuffer.wrap(buf));
 		ObjectInputStream in = new PurpleJrankInput(ch);
 		Object actual = in.readObject();
 		in.close();
