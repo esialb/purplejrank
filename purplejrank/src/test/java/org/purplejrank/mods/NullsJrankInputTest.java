@@ -2,10 +2,14 @@ package org.purplejrank.mods;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.Externalizable;
 import java.io.IOException;
+import java.io.ObjectInput;
 import java.io.ObjectInputStream;
+import java.io.ObjectOutput;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.junit.Assert;
 import org.junit.Assume;
@@ -19,14 +23,20 @@ public class NullsJrankInputTest {
 	public static class Missing implements Serializable {
 		private static final long serialVersionUID = 0;
 		
-		@SuppressWarnings("unused")
-		private Integer i = 1;
-		
-		private void writeObject(ObjectOutputStream out) throws IOException {
-			out.defaultWriteObject();
-			out.writeInt(2);
+		public Counter counter = new Counter();
+	}
+	
+	public static class Counter implements Externalizable {
+		private static final long serialVersionUID = 0;
+		public static AtomicInteger count = new AtomicInteger();
+		public Counter() {
+			count.incrementAndGet();
 		}
 		
+		@Override
+		public void writeExternal(ObjectOutput out) throws IOException {}
+		@Override
+		public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {}
 	}
 	
 	private static class MissingMissingClassLoader extends ClassLoader {
@@ -49,8 +59,9 @@ public class NullsJrankInputTest {
 		try {
 			StreamWritableByteChannel ch = new StreamWritableByteChannel(bout);
 			ObjectOutputStream out = new PurpleJrankOutput(ch);
-			out.writeObject(new Missing());
-			out.writeObject(1);
+			Missing m = new Missing();
+			out.writeObject(m);
+			out.writeObject(m.counter);
 			out.close();
 		} catch(Exception e) {
 			Assume.assumeNoException(e);;
@@ -63,7 +74,8 @@ public class NullsJrankInputTest {
 		ObjectInputStream in = new NullsJrankInput(ch, new MissingMissingClassLoader());
 
 		Assert.assertNull(in.readObject());;
-		Assert.assertEquals(1, in.readObject());
+		Assert.assertTrue(in.readUnshared() instanceof Counter);
+		Assert.assertEquals(3, Counter.count.get());
 
 		in.close();
 	}

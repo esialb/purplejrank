@@ -29,6 +29,7 @@ import java.util.Set;
 import java.util.TreeMap;
 
 import org.purplejrank.io.StreamReadableByteChannel;
+import org.purplejrank.reflect.ConstructorInstantiator;
 import org.purplejrank.reflect.FieldCache;
 import org.purplejrank.reflect.Instantiator;
 import org.purplejrank.reflect.InstantiatorCache;
@@ -427,6 +428,8 @@ public class PurpleJrankInput extends ObjectInputStream implements ObjectInput {
 		try {
 			if(Proxy.isProxyClass(cls))
 				i = new ProxyInstantiator(cls);
+			else if(Externalizable.class.isAssignableFrom(cls))
+				i = new ConstructorInstantiator(cls);
 			else
 				i = new SerializableInstantiator(cls);
 		} catch(NoSuchMethodException e) {
