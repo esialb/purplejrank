@@ -3,6 +3,8 @@ Purple Jrank is a more robust way to serialize objects than the JDK's **ObjectOu
 
 Purple Jrank means reliable and flexible serialization even in the face of changing (or even missing) classes.
 
+Purple Jrank has no dependencies.
+
 ## Where to Get Purple Jrank
 
 Purple Jrank is built and deployed with Apache Maven.  Right now it isn't on Maven Central, so you'll have to add the development repository.
