@@ -333,16 +333,18 @@ public class PurpleJrankInput extends ObjectInputStream implements ObjectInput {
 				Set<Class<?>> restoredClasses = new HashSet<Class<?>>();
 				for(JrankClass t = d; t != null; t = t.getParent()) {
 					context.offerLast(new JrankContext(t, obj));
+					Method m = null;
+					try {
+						m = methodCache.get(t.getType(), "readObject", ObjectInputStream.class);
+					} catch(NoSuchMethodException e) {}
 					if(obj == null)
 						skipOptionalData();
 					if(t.getType() == null || !t.getType().isInstance(obj))
 						skipOptionalData();
-					else if(t.getFlags() == JrankConstants.SC_WRITE_OBJECT) {
+					else if(m != null) {
 						restoredClasses.add(t.getType());
 						try {
-							Method m = methodCache.get(t.getType(), "readObject", ObjectInputStream.class);
 							m.invoke(obj, this);
-						} catch(NoSuchMethodException e) {
 						} catch(Exception ex) {
 							throw new JrankStreamException(ex);
 						}
@@ -350,6 +352,7 @@ public class PurpleJrankInput extends ObjectInputStream implements ObjectInput {
 					} else {
 						restoredClasses.add(t.getType());
 						defaultReadObject();
+						skipOptionalData();
 					}
 					setBlockMode(false).ensureAvailable(1);
 					if(buf.get() != JrankConstants.WALL)
