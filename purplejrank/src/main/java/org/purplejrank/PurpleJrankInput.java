@@ -230,8 +230,11 @@ public class PurpleJrankInput extends ObjectInputStream implements ObjectInput {
 		int i;
 		do {
 			i = readEscapedInt();
-			if(i != 0)
-				sb.append((char)(i-1));
+			if(i != 0) {
+				if(i == 0x1ffff)
+					i = 0;
+				sb.append((char) i);
+			}
 		} while(i != 0);
 		return sb.toString();
 	}

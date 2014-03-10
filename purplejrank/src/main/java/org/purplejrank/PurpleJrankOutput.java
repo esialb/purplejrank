@@ -161,7 +161,10 @@ public class PurpleJrankOutput extends ObjectOutputStream implements ObjectOutpu
 		// Instead of the JRE's modified UTF-8, write bit-8-escaped ints
 		setBlockMode(blockMode);
 		for(int i = 0; i < s.length(); i++) {
-			writeEscapedInt(s.charAt(i) + 1);
+			int c = s.charAt(i);
+			if(c == 0)
+				c = 0x1ffff;
+			writeEscapedInt(c);
 		}
 		writeEscapedInt(0);
 	}
