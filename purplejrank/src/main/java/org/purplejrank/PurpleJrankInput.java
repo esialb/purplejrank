@@ -34,7 +34,6 @@ import org.purplejrank.cache.MethodCache;
 
 public class PurpleJrankInput extends ObjectInputStream implements ObjectInput {
 
-	protected boolean isClosed = false;
 	protected ReadableByteChannel in;
 	protected ByteBuffer buf = ByteBuffer.allocateDirect(JrankConstants.MAX_BLOCK_SIZE);
 	protected int blockEnd = 0;
@@ -64,7 +63,7 @@ public class PurpleJrankInput extends ObjectInputStream implements ObjectInput {
 	}
 	
 	protected PurpleJrankInput ensureOpen() throws IOException {
-		if(isClosed) throw new IOException("channel closed");
+		if(!in.isOpen()) throw new IOException("channel closed");
 		return this;
 	}
 	
@@ -607,7 +606,7 @@ public class PurpleJrankInput extends ObjectInputStream implements ObjectInput {
 
 	@Override
 	public void close() throws IOException {
-		isClosed = true;
+		in.close();
 	}
 
 	@Override

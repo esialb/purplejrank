@@ -24,7 +24,6 @@ import org.purplejrank.cache.FieldCache;
 import org.purplejrank.cache.MethodCache;
 
 public class PurpleJrankOutput extends ObjectOutputStream implements ObjectOutput {
-	protected boolean isClosed = false;
 	protected WritableByteChannel out;
 	protected ByteBuffer buf = ByteBuffer.allocateDirect(JrankConstants.MAX_BLOCK_SIZE);
 	protected boolean blockMode = false;
@@ -44,7 +43,7 @@ public class PurpleJrankOutput extends ObjectOutputStream implements ObjectOutpu
 	}
 	
 	protected PurpleJrankOutput ensureOpen() throws IOException {
-		if(isClosed)
+		if(!out.isOpen())
 			throw new IOException("channel closed");
 		return this;
 	}
@@ -351,10 +350,7 @@ public class PurpleJrankOutput extends ObjectOutputStream implements ObjectOutpu
 
 	@Override
 	public void close() throws IOException {
-		if(isClosed)
-			return;
 		flush();
-		isClosed = true;
 		out.close();
 	}
 
