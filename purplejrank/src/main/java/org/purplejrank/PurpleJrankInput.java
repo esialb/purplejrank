@@ -302,7 +302,9 @@ public class PurpleJrankInput extends ObjectInputStream implements ObjectInput {
 			} else {
 				for(JrankClass t = d; t != null; t = t.getParent()) {
 					context.offerLast(new JrankContext(t, obj));
-					if(t.getFlags() == JrankConstants.SC_WRITE_OBJECT) {
+					if(obj == null)
+						skipOptionalData();
+					else if(t.getFlags() == JrankConstants.SC_WRITE_OBJECT) {
 						try {
 							Method m = t.getType().getDeclaredMethod("readObject", ObjectInputStream.class);
 							m.setAccessible(true);
@@ -448,6 +450,8 @@ public class PurpleJrankInput extends ObjectInputStream implements ObjectInput {
 			int fc = 0;
 			for(int i = 0; i < nfields; i++) {
 				try {
+					if(d.getType() == null)
+						continue;
 					Field f = d.getType().getDeclaredField(fieldNames[i]);
 					if(Modifier.isStatic(f.getModifiers()) || Modifier.isTransient(f.getModifiers()))
 						continue;
