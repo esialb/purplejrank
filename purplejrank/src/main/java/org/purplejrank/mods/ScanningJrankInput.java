@@ -8,7 +8,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.purplejrank.JrankClass;
-import org.purplejrank.PurpleJrankInput;
 
 public class ScanningJrankInput extends NullsJrankInput {
 	
