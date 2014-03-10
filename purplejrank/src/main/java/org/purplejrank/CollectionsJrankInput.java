@@ -2,11 +2,8 @@ package org.purplejrank;
 
 import java.io.IOException;
 import java.io.NotActiveException;
-import java.lang.reflect.Field;
 import java.nio.channels.ReadableByteChannel;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -61,6 +58,7 @@ public class CollectionsJrankInput extends PurpleJrankInput {
 		}
 	}
 	
+	@SuppressWarnings("unchecked")
 	@Override
 	public void defaultReadObject() throws IOException, ClassNotFoundException {
 		JrankContext ctx = context.peekLast();
@@ -76,6 +74,7 @@ public class CollectionsJrankInput extends PurpleJrankInput {
 	protected void checkSerialVersion(JrankClass desc, Class<?> cls) throws ClassNotFoundException {
 	}
 	
+	@SuppressWarnings("unchecked")
 	@Override
 	protected void setArrayElement(Object array, int index, Object value) {
 		((List<Object>) array).set(index, value);

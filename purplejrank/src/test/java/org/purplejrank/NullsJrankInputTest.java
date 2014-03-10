@@ -17,6 +17,7 @@ public class NullsJrankInputTest {
 	public static class Missing implements Serializable {
 		private static final long serialVersionUID = 0;
 		
+		@SuppressWarnings("unused")
 		private int i = 1;
 		
 		private void writeObject(ObjectOutputStream out) throws IOException {

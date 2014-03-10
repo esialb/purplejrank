@@ -1,6 +1,5 @@
 package org.purplejrank;
 
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -19,7 +18,6 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 import org.purplejrank.io.ByteBufferByteChannel;
-import org.purplejrank.io.StreamReadableByteChannel;
 import org.purplejrank.io.StreamWritableByteChannel;
 
 @RunWith(Parameterized.class)
