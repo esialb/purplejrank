@@ -3,6 +3,7 @@ package org.purplejrank;
 import java.io.Externalizable;
 import java.io.ObjectOutputStream;
 import java.io.ObjectStreamClass;
+import java.io.ObjectStreamField;
 import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
@@ -17,17 +18,18 @@ import org.purplejrank.reflect.FieldCache;
  *
  */
 public class JrankClass {
-	private boolean proxy;
-	private String[] proxyInterfaceNames;
-	private byte flags;
-	private String name;
-	private long serialVersion;
-	private String[] fieldNames;
-	private String[] fieldTypes;
-	private JrankClass parent;
+	protected boolean proxy;
+	protected String[] proxyInterfaceNames;
+	protected byte flags;
+	protected String name;
+	protected long serialVersion;
+	protected String[] fieldNames;
+	protected String[] fieldTypes;
+	protected Class<?>[] fieldClasses;
+	protected JrankClass parent;
 	
-	private Class<?> type;
-	private Field[] fields;
+	protected Class<?> type;
+	protected Field[] fields;
 	
 	JrankClass() {}
 	
@@ -54,7 +56,7 @@ public class JrankClass {
 		}
 	}
 	
-	private void setFieldFields(Class<?> cls, FieldCache fieldCache) {
+	protected void setFieldFields(Class<?> cls, FieldCache fieldCache) {
 		flags = 0;
 		if(Enum.class.isAssignableFrom(cls))
 			flags = JrankConstants.SC_WRITE_ENUM;
@@ -70,20 +72,55 @@ public class JrankClass {
 			}
 		}
 		fields = fieldCache.get(cls);
+		Field spf = null;
+		try {
+			spf = fieldCache.get(cls, "serialPersistentFields");
+			if(!Modifier.isStatic(spf.getModifiers()))
+				spf = null;
+			if(!spf.getType().equals(ObjectStreamField[].class))
+				spf = null;
+		} catch(NoSuchFieldException e) {}
+		
+		if(spf != null) {
+			try {
+				ObjectStreamField[] pf = (ObjectStreamField[]) spf.get(null);
+				fieldNames = new String[pf.length];
+				fieldTypes = new String[pf.length];
+				fieldClasses = new Class<?>[pf.length];
+				fields = new Field[pf.length];
+				int fc = 0;
+				for(int i = 0; i < pf.length; i++) {
+					fieldNames[i] = pf[i].getName();
+					fieldTypes[i] = className(pf[i].getType());
+					fieldClasses[i] = pf[i].getType();
+					try {
+						fields[fc] = fieldCache.get(cls, pf[i].getName());
+						fc++;
+					} catch(NoSuchFieldException e) {}
+				}
+				fields = Arrays.copyOf(fields, fc);
+				return;
+			} catch(Exception e) {
+			}
+		}
+		
 		fieldNames = new String[fields.length];
 		fieldTypes = new String[fields.length];
+		fieldClasses = new Class<?>[fields.length];
 		int fi = 0;
 		for(int i = 0; i < fields.length; i++) {
 			if(Modifier.isStatic(fields[i].getModifiers()) || Modifier.isTransient(fields[i].getModifiers()))
 				continue;
 			fieldNames[fi] = fields[i].getName();
 			fieldTypes[fi] = className(fields[i].getType());
+			fieldClasses[fi] = fields[i].getType();
 			fields[fi] = fields[i];
 			fi++;
 		}
 		fieldNames = Arrays.copyOf(fieldNames, fi);
 		fieldTypes = Arrays.copyOf(fieldTypes, fi);
 		fields = Arrays.copyOf(fields, fi);
+		fieldClasses = Arrays.copyOf(fieldClasses, fi);
 	}
 	
 	@Override
@@ -93,7 +130,7 @@ public class JrankClass {
 		return name + Arrays.toString(fieldNames);
 	}
 	
-	private String className(Class<?> fc) {
+	protected String className(Class<?> fc) {
 		if(fc == byte.class) return "B";
 		else if(fc == char.class) return "C";
 		else if(fc == double.class) return "D";
@@ -108,7 +145,7 @@ public class JrankClass {
 			return "L" + fc.getName() + ";";
 	}
 	
-	private String arrayBrackets(Class<?> ac) {
+	protected String arrayBrackets(Class<?> ac) {
 		if(!ac.isArray()) {
 			return className(ac);
 		}
@@ -147,6 +184,10 @@ public class JrankClass {
 		return fields;
 	}
 
+	public Class<?>[] getFieldClasses() {
+		return fieldClasses;
+	}
+	
 	protected void setProxy(boolean proxy) {
 		this.proxy = proxy;
 	}
@@ -185,5 +226,9 @@ public class JrankClass {
 
 	protected void setFields(Field[] fields) {
 		this.fields = fields;
+	}
+	
+	protected void setFieldClasses(Class<?>[] fieldClasses) {
+		this.fieldClasses = fieldClasses;
 	}
 }

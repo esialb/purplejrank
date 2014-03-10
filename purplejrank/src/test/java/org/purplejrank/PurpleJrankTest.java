@@ -3,6 +3,7 @@ package org.purplejrank;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.BitSet;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
@@ -30,7 +31,8 @@ public class PurpleJrankTest implements Serializable {
 				Calendar.getInstance(),
 				new Properties(),
 				new Vector<Object>(),
-				new Date()
+				new Date(),
+				new BitSet()
 				);
 		List<Object[]> ret = new ArrayList<Object[]>(objs.size());
 		for(int i = 0; i < objs.size(); i++)
