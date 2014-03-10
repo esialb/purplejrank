@@ -1,5 +1,6 @@
 package org.purplejrank;
 
+import java.io.EOFException;
 import java.io.Externalizable;
 import java.io.IOException;
 import java.io.InputStream;
@@ -113,7 +114,9 @@ public class PurpleJrankInput extends ObjectInputStream implements ObjectInput {
 			buf.compact();
 			buf.position(r);
 			buf.limit(r + available);
-			in.read(buf);
+			r = in.read(buf);
+			if(r == -1)
+				throw new EOFException();
 			buf.position(0);
 		}
 		return buf;
@@ -396,6 +399,8 @@ public class PurpleJrankInput extends ObjectInputStream implements ObjectInput {
 	}
 	
 	protected void setArrayElement(Object array, int index, Object value) {
+		if(array == null)
+			return;
 		Array.set(array, index, value);
 	}
 	
