@@ -275,6 +275,7 @@ public class PurpleJrankOutput extends ObjectOutputStream implements ObjectOutpu
 				t = t.getParent();
 			}
 		}
+		setBlockMode(false).ensureCapacity(1).put(JrankConstants.WALL);
 		
 	}
 	

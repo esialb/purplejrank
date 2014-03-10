@@ -370,6 +370,10 @@ public class PurpleJrankInput extends ObjectInputStream implements ObjectInput {
 					unrestored = unrestored.getSuperclass();
 				}
 			}
+			
+			setBlockMode(false).ensureAvailable(1);
+			if(buf.get() != JrankConstants.WALL)
+				throw new StreamCorruptedException();
 
 			Method m = findReadResolve(obj);
 			if(m != null) {
