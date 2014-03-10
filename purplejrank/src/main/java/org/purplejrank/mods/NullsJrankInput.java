@@ -1,7 +1,9 @@
-package org.purplejrank;
+package org.purplejrank.mods;
 
 import java.io.IOException;
 import java.nio.channels.ReadableByteChannel;
+
+import org.purplejrank.PurpleJrankInput;
 
 public class NullsJrankInput extends PurpleJrankInput {
 

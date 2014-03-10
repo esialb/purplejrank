@@ -1,4 +1,4 @@
-package org.purplejrank;
+package org.purplejrank.mods;
 
 import java.io.IOException;
 import java.io.NotActiveException;
@@ -7,6 +7,12 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
+
+import org.purplejrank.JrankClass;
+import org.purplejrank.JrankConstants;
+import org.purplejrank.JrankContext;
+import org.purplejrank.JrankGetFields;
+import org.purplejrank.PurpleJrankInput;
 
 public class CollectionsJrankInput extends PurpleJrankInput {
 
@@ -46,7 +52,8 @@ public class CollectionsJrankInput extends PurpleJrankInput {
 		for(byte b = peek(); b != JrankConstants.WALL; b = peek()) {
 			switch(b) {
 			case JrankConstants.BLOCK_DATA:
-				setBlockMode(true).setBlockMode(false);
+				setBlockMode(true);
+				setBlockMode(false);
 				break;
 			case JrankConstants.FIELDS:
 				defaultReadObject();

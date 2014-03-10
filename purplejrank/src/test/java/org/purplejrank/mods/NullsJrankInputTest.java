@@ -1,4 +1,4 @@
-package org.purplejrank;
+package org.purplejrank.mods;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -10,10 +10,12 @@ import java.io.Serializable;
 import org.junit.Assert;
 import org.junit.Assume;
 import org.junit.Test;
+import org.purplejrank.PurpleJrankOutput;
 import org.purplejrank.io.StreamReadableByteChannel;
 import org.purplejrank.io.StreamWritableByteChannel;
+import org.purplejrank.mods.NullsJrankInput;
 
-public class CollectionsJrankInputTest {
+public class NullsJrankInputTest {
 	public static class Missing implements Serializable {
 		private static final long serialVersionUID = 0;
 		
@@ -48,7 +50,7 @@ public class CollectionsJrankInputTest {
 			StreamWritableByteChannel ch = new StreamWritableByteChannel(bout);
 			ObjectOutputStream out = new PurpleJrankOutput(ch);
 			out.writeObject(new Missing());
-			out.writeObject(new Missing[4]);
+			out.writeObject(new Missing[0]);
 			out.close();
 		} catch(Exception e) {
 			Assume.assumeNoException(e);;
@@ -58,11 +60,11 @@ public class CollectionsJrankInputTest {
 
 		ByteArrayInputStream bin = new ByteArrayInputStream(buf);
 		StreamReadableByteChannel ch = new StreamReadableByteChannel(bin);
-		ObjectInputStream in = new CollectionsJrankInput(ch, new MissingMissingClassLoader());
+		ObjectInputStream in = new NullsJrankInput(ch, new MissingMissingClassLoader());
 
-		Assert.assertEquals("{-class=Lorg.purplejrank.CollectionsJrankInputTest$Missing;, i=1}", in.readObject().toString());
-		Assert.assertEquals("[null, null, null, null]", in.readObject().toString());
-		
+		Assert.assertNull(in.readObject());;
+		Assert.assertNull(in.readObject());;
+
 		in.close();
 	}
 }
