@@ -1,6 +1,7 @@
 package org.purplejrank;
 
 import java.io.IOException;
+import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -45,6 +46,8 @@ public class WriteReplaceTest {
 		bb = (Object[]) Util.cycle(bb);
 		b1 = (B) bb[0]; b2 = (B) bb[1];
 		Assert.assertSame(b1, b2);
+		Assert.assertSame(b1, b1.thiz);
+		Assert.assertSame(b2, b2.thiz);
 		Assert.assertEquals(1, B.count.get());
 	}
 }

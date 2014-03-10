@@ -40,6 +40,7 @@ public class PurpleJrankOutput extends ObjectOutputStream implements ObjectOutpu
 	protected FieldCache fieldCache = new FieldCache();
 	protected MethodCache methodCache = new MethodCache();
 	protected Map<Object, Integer> wired = new IdentityHashMap<Object, Integer>();
+	protected int nextHandle = 0;
 	protected Map<Class<?>, JrankClass> classdesc = new IdentityHashMap<Class<?>, JrankClass>();
 	protected Deque<JrankContext> context = new ArrayDeque<JrankContext>(Arrays.asList(JrankContext.NO_CONTEXT));
 	
@@ -192,7 +193,6 @@ public class PurpleJrankOutput extends ObjectOutputStream implements ObjectOutpu
 			return;
 		}
 		
-		int handle;
 		Object preReplace = obj;
 		
 		Method writeReplace = findWriteReplace(obj);
@@ -208,7 +208,7 @@ public class PurpleJrankOutput extends ObjectOutputStream implements ObjectOutpu
 			ensureCapacity(1).put(JrankConstants.ARRAY);
 			JrankClass d = writeClassDesc(obj.getClass());
 			if(!wired.containsKey(obj))
-				wired.put(obj, wired.size());
+				wired.put(obj, nextHandle++);
 			int size;
 			setBlockMode(false).writeEscapedInt(size = Array.getLength(obj));
 			Class<?> cmp = obj.getClass().getComponentType();
@@ -230,7 +230,7 @@ public class PurpleJrankOutput extends ObjectOutputStream implements ObjectOutpu
 		
 		if(obj instanceof String) {
 			if(!wired.containsKey(obj))
-				wired.put(obj, wired.size());
+				wired.put(obj, nextHandle++);
 			ensureCapacity(1).put(JrankConstants.STRING);
 			writeUTF((String) obj, false);
 			return;
@@ -240,15 +240,16 @@ public class PurpleJrankOutput extends ObjectOutputStream implements ObjectOutpu
 			ensureCapacity(1).put(JrankConstants.ENUM);
 			writeClassDesc(obj.getClass());
 			if(!wired.containsKey(obj))
-				wired.put(obj, wired.size());
+				wired.put(obj, nextHandle++);
 			writeObject(((Enum<?>) obj).name());
 		}
 		
 		ensureCapacity(1).put(JrankConstants.OBJECT);
 		JrankClass d = writeClassDesc(obj.getClass());
 		if(!wired.containsKey(obj)) {
-			wired.put(obj, handle = wired.size());
-			wired.put(preReplace, handle);
+			wired.put(obj, nextHandle);
+			wired.put(preReplace, nextHandle);
+			nextHandle++;
 		}
 		
 		if(d.getFlags() == JrankConstants.SC_WRITE_EXTERNAL) {
@@ -292,7 +293,7 @@ public class PurpleJrankOutput extends ObjectOutputStream implements ObjectOutpu
 		}
 		
 		JrankClass d;
-		wired.put(cls, wired.size());
+		wired.put(cls, nextHandle++);
 		classdesc.put(cls, d = new JrankClass(cls, fieldCache));
 		
 		if(d.isProxy()) {
