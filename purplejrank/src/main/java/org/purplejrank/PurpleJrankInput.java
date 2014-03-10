@@ -27,6 +27,8 @@ import java.util.TreeMap;
 import org.objenesis.ObjenesisHelper;
 import org.objenesis.instantiator.basic.ConstructorInstantiator;
 import org.objenesis.strategy.SerializingInstantiatorStrategy;
+import org.purplejrank.cache.FieldCache;
+import org.purplejrank.cache.MethodCache;
 
 public class PurpleJrankInput extends ObjectInputStream implements ObjectInput {
 

@@ -16,6 +16,8 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
+import org.purplejrank.io.StreamReadableByteChannel;
+import org.purplejrank.io.StreamWritableByteChannel;
 
 @RunWith(Parameterized.class)
 public class PurpleJrankTest implements Serializable {

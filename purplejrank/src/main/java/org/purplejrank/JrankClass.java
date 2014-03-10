@@ -9,6 +9,8 @@ import java.lang.reflect.Modifier;
 import java.lang.reflect.Proxy;
 import java.util.Arrays;
 
+import org.purplejrank.cache.FieldCache;
+
 public class JrankClass {
 	private boolean proxy;
 	private String[] proxyInterfaceNames;

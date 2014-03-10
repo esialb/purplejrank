@@ -20,6 +20,9 @@ import java.util.Deque;
 import java.util.IdentityHashMap;
 import java.util.Map;
 
+import org.purplejrank.cache.FieldCache;
+import org.purplejrank.cache.MethodCache;
+
 public class PurpleJrankOutput extends ObjectOutputStream implements ObjectOutput {
 	protected boolean isClosed = false;
 	protected WritableByteChannel out;

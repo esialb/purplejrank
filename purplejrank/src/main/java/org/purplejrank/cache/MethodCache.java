@@ -1,4 +1,4 @@
-package org.purplejrank;
+package org.purplejrank.cache;
 
 import java.lang.reflect.Method;
 import java.util.Arrays;

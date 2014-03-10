@@ -10,6 +10,8 @@ import java.io.Serializable;
 import org.junit.Assert;
 import org.junit.Assume;
 import org.junit.Test;
+import org.purplejrank.io.StreamReadableByteChannel;
+import org.purplejrank.io.StreamWritableByteChannel;
 
 public class NullsJrankInputTest {
 	public static class Missing implements Serializable {

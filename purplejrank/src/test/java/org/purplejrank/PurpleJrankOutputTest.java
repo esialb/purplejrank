@@ -7,6 +7,7 @@ import java.util.Arrays;
 import java.util.Vector;
 
 import org.junit.Test;
+import org.purplejrank.io.StreamWritableByteChannel;
 
 public class PurpleJrankOutputTest {
 	@Test

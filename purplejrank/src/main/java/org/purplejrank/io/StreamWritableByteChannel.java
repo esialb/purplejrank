@@ -1,4 +1,4 @@
-package org.purplejrank;
+package org.purplejrank.io;
 
 import java.io.Flushable;
 import java.io.IOException;
