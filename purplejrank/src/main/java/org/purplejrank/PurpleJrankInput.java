@@ -540,7 +540,7 @@ public class PurpleJrankInput extends ObjectInputStream implements ObjectInput {
 			int depth = name.replaceAll("[^\\[]", "").length();
 			return resolveArrayClass(c, depth);
 		}
-		name = name.substring(1, name.length() - 1);
+		name = name.substring(1, name.length() - 1).replaceAll("/", ".");
 		return resolveOrdinaryClass(name);
 	}
 	
@@ -549,7 +549,7 @@ public class PurpleJrankInput extends ObjectInputStream implements ObjectInput {
 	}
 	
 	protected Class<?> resolveOrdinaryClass(String name) throws ClassNotFoundException {
-		return Class.forName(name, false, cl);
+		return cl.loadClass(name);
 	}
 	
 	@Override
@@ -557,7 +557,7 @@ public class PurpleJrankInput extends ObjectInputStream implements ObjectInput {
 			throws IOException, ClassNotFoundException {
 		Class<?>[] ifcs = new Class<?>[interfaces.length];
 		for(int i = 0; i < ifcs.length; i++)
-			ifcs[i] = Class.forName(interfaces[i], false, cl);
+			ifcs[i] = cl.loadClass(interfaces[i]);
 		return Proxy.getProxyClass(cl, ifcs);
 	}
 	
