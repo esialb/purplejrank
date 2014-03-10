@@ -617,29 +617,34 @@ public class PurpleJrankInput extends ObjectInputStream implements ObjectInput {
 		validation.get(prio).add(obj);
 	}
 
+	@Deprecated
 	@Override
 	protected final Class<?> resolveClass(ObjectStreamClass desc) throws IOException,
 			ClassNotFoundException {
 		throw new UnsupportedOperationException();
 	}
 
+	@Deprecated
 	@Override
 	protected final Object resolveObject(Object obj) throws IOException {
 		throw new UnsupportedOperationException();
 	}
 
+	@Deprecated
 	@Override
 	protected final boolean enableResolveObject(boolean enable)
 			throws SecurityException {
 		throw new UnsupportedOperationException();
 	}
 
+	@Deprecated
 	@Override
 	protected final void readStreamHeader() throws IOException,
 			StreamCorruptedException {
 		throw new UnsupportedOperationException();
 	}
 
+	@Deprecated
 	@Override
 	protected final ObjectStreamClass readClassDescriptor() throws IOException,
 			ClassNotFoundException {

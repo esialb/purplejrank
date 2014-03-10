@@ -419,4 +419,54 @@ public class PurpleJrankOutput extends ObjectOutputStream implements ObjectOutpu
 		wired.clear();
 		classdesc.clear();
 	}
+
+	@Deprecated
+	@Override
+	public final void useProtocolVersion(int version) throws IOException {
+		throw new UnsupportedOperationException();
+	}
+
+	@Deprecated
+	@Override
+	protected final void annotateClass(Class<?> cl) throws IOException {
+		throw new UnsupportedOperationException();
+	}
+
+	@Deprecated
+	@Override
+	protected final void annotateProxyClass(Class<?> cl) throws IOException {
+		throw new UnsupportedOperationException();
+	}
+
+	@Deprecated
+	@Override
+	protected final Object replaceObject(Object obj) throws IOException {
+		throw new UnsupportedOperationException();
+	}
+
+	@Deprecated
+	@Override
+	protected final boolean enableReplaceObject(boolean enable)
+			throws SecurityException {
+		throw new UnsupportedOperationException();
+	}
+
+	@Deprecated
+	@Override
+	protected final void writeStreamHeader() throws IOException {
+		throw new UnsupportedOperationException();
+	}
+
+	@Deprecated
+	@Override
+	protected final void writeClassDescriptor(ObjectStreamClass desc)
+			throws IOException {
+		throw new UnsupportedOperationException();
+	}
+
+	@Deprecated
+	@Override
+	protected final void drain() throws IOException {
+		throw new UnsupportedOperationException();
+	}
 }
