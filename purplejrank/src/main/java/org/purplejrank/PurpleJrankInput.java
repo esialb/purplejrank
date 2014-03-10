@@ -2,6 +2,7 @@ package org.purplejrank;
 
 import java.io.Externalizable;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InvalidObjectException;
 import java.io.NotActiveException;
 import java.io.ObjectInput;
@@ -31,6 +32,7 @@ import org.objenesis.instantiator.basic.ConstructorInstantiator;
 import org.objenesis.strategy.SerializingInstantiatorStrategy;
 import org.purplejrank.cache.FieldCache;
 import org.purplejrank.cache.MethodCache;
+import org.purplejrank.io.StreamReadableByteChannel;
 
 /**
  * Extension of {@link ObjectInputStream} with a protocol based on {@link ObjectInputStream},
@@ -50,6 +52,14 @@ public class PurpleJrankInput extends ObjectInputStream implements ObjectInput {
 	protected List<Object> wired = new ArrayList<Object>();
 	protected Deque<JrankContext> context = new ArrayDeque<JrankContext>(Arrays.asList(JrankContext.NO_CONTEXT));
 	protected NavigableMap<Integer, List<ObjectInputValidation>> validation = new TreeMap<Integer, List<ObjectInputValidation>>();
+	
+	public PurpleJrankInput(InputStream in) throws IOException {
+		this(in, PurpleJrankInput.class.getClassLoader());
+	}
+	
+	public PurpleJrankInput(InputStream in, ClassLoader cl) throws IOException {
+		this(new StreamReadableByteChannel(in), cl);
+	}
 	
 	public PurpleJrankInput(ReadableByteChannel in) throws IOException {
 		this(in, PurpleJrankInput.class.getClassLoader());

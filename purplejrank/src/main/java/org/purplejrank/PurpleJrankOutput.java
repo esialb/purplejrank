@@ -8,6 +8,7 @@ import java.io.NotSerializableException;
 import java.io.ObjectOutput;
 import java.io.ObjectOutputStream;
 import java.io.ObjectStreamClass;
+import java.io.OutputStream;
 import java.io.Serializable;
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
@@ -22,6 +23,7 @@ import java.util.Map;
 
 import org.purplejrank.cache.FieldCache;
 import org.purplejrank.cache.MethodCache;
+import org.purplejrank.io.StreamWritableByteChannel;
 
 /**
  * Extension of {@link ObjectOutputStream} with a protocol based on {@link ObjectOutputStream}
@@ -40,6 +42,10 @@ public class PurpleJrankOutput extends ObjectOutputStream implements ObjectOutpu
 	protected Map<Object, Integer> wired = new IdentityHashMap<Object, Integer>();
 	protected Map<Class<?>, JrankClass> classdesc = new IdentityHashMap<Class<?>, JrankClass>();
 	protected Deque<JrankContext> context = new ArrayDeque<JrankContext>(Arrays.asList(JrankContext.NO_CONTEXT));
+	
+	public PurpleJrankOutput(OutputStream out) throws IOException {
+		this(new StreamWritableByteChannel(out));
+	}
 	
 	public PurpleJrankOutput(WritableByteChannel out) throws IOException {
 		this.out = out;
