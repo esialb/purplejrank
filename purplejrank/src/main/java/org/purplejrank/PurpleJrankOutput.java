@@ -21,15 +21,15 @@ import java.util.IdentityHashMap;
 import java.util.Map;
 
 public class PurpleJrankOutput extends ObjectOutputStream implements ObjectOutput {
-	private boolean isClosed = false;
-	private WritableByteChannel out;
-	private ByteBuffer buf = ByteBuffer.allocateDirect(JrankConstants.MAX_BLOCK_SIZE);
-	private boolean blockMode = false;
-	private ByteBuffer blockHeader = ByteBuffer.allocateDirect(5);
+	protected boolean isClosed = false;
+	protected WritableByteChannel out;
+	protected ByteBuffer buf = ByteBuffer.allocateDirect(JrankConstants.MAX_BLOCK_SIZE);
+	protected boolean blockMode = false;
+	protected ByteBuffer blockHeader = ByteBuffer.allocateDirect(5);
 	
-	private Map<Object, Integer> wired = new IdentityHashMap<Object, Integer>();
-	private Map<Class<?>, JrankClass> classdesc = new IdentityHashMap<Class<?>, JrankClass>();
-	private Deque<JrankContext> context = new ArrayDeque<JrankContext>(Arrays.asList(JrankContext.NO_CONTEXT));
+	protected Map<Object, Integer> wired = new IdentityHashMap<Object, Integer>();
+	protected Map<Class<?>, JrankClass> classdesc = new IdentityHashMap<Class<?>, JrankClass>();
+	protected Deque<JrankContext> context = new ArrayDeque<JrankContext>(Arrays.asList(JrankContext.NO_CONTEXT));
 	
 	public PurpleJrankOutput(WritableByteChannel out) throws IOException {
 		this.out = out;
@@ -38,20 +38,20 @@ public class PurpleJrankOutput extends ObjectOutputStream implements ObjectOutpu
 		flush();
 	}
 	
-	private PurpleJrankOutput ensureOpen() throws IOException {
+	protected PurpleJrankOutput ensureOpen() throws IOException {
 		if(isClosed)
 			throw new IOException("channel closed");
 		return this;
 	}
 	
-	private PurpleJrankOutput setBlockMode(boolean blockMode) throws IOException {
+	protected PurpleJrankOutput setBlockMode(boolean blockMode) throws IOException {
 		if(blockMode != this.blockMode)
 			flush();
 		this.blockMode = blockMode;
 		return this;
 	} 
 	
-	private ByteBuffer ensureCapacity(int capacity) throws IOException {
+	protected ByteBuffer ensureCapacity(int capacity) throws IOException {
 		if(buf.remaining() < capacity)
 			flush();
 		return buf;
@@ -109,7 +109,7 @@ public class PurpleJrankOutput extends ObjectOutputStream implements ObjectOutpu
 			writeChar(s.charAt(i));
 	}
 	
-	private void writeEscapedInt(int v) throws IOException {
+	protected void writeEscapedInt(int v) throws IOException {
 		ensureCapacity(1);
 		if((v & 0x7f) != v) {
 			buf.put((byte)(0x80 | (0x7f & v)));
@@ -118,7 +118,7 @@ public class PurpleJrankOutput extends ObjectOutputStream implements ObjectOutpu
 			buf.put((byte)v);
 	}
 	
-	private void writeEscapedInt(ByteBuffer buf, int v) throws IOException {
+	protected void writeEscapedInt(ByteBuffer buf, int v) throws IOException {
 		ensureCapacity(1);
 		if((v & 0x7f) != v) {
 			buf.put((byte)(0x80 | (0x7f & v)));
@@ -127,7 +127,7 @@ public class PurpleJrankOutput extends ObjectOutputStream implements ObjectOutpu
 			buf.put((byte)v);
 	}
 
-	private void writeEscapedLong(long v) throws IOException {
+	protected void writeEscapedLong(long v) throws IOException {
 		ensureCapacity(1);
 		if((v & 0x7f) != v) {
 			buf.put((byte)(0x80 | (0x7f & v)));
@@ -141,7 +141,7 @@ public class PurpleJrankOutput extends ObjectOutputStream implements ObjectOutpu
 		writeUTF(s, true);
 	}
 	
-	private void writeUTF(String s, boolean blockMode) throws IOException {
+	protected void writeUTF(String s, boolean blockMode) throws IOException {
 		// Instead of the JRE's modified UTF-8, write bit-8-escaped ints
 		setBlockMode(blockMode);
 		for(int i = 0; i < s.length(); i++) {
@@ -156,7 +156,7 @@ public class PurpleJrankOutput extends ObjectOutputStream implements ObjectOutpu
 		flush();
 	}
 	
-	private void writeObject0(Object obj, boolean shared) throws IOException {
+	protected void writeObject0(Object obj, boolean shared) throws IOException {
 		ensureOpen().setBlockMode(false);
 		
 		if(obj == null) {
@@ -254,7 +254,7 @@ public class PurpleJrankOutput extends ObjectOutputStream implements ObjectOutpu
 		
 	}
 	
-	private JrankClass writeClassDesc(Class<?> cls) throws IOException {
+	protected JrankClass writeClassDesc(Class<?> cls) throws IOException {
 		setBlockMode(false);
 		
 		if(cls == null || !Serializable.class.isAssignableFrom(cls)) {
@@ -295,7 +295,7 @@ public class PurpleJrankOutput extends ObjectOutputStream implements ObjectOutpu
 		return d;
 	}
 	
-	private Method findWriteReplace(Object obj) {
+	protected Method findWriteReplace(Object obj) {
 		Class<?> cls = obj.getClass();
 		while(cls != null) {
 			try {
