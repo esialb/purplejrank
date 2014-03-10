@@ -14,6 +14,8 @@ import org.junit.Test;
 
 public class TestJDKUnparseableStream {
 	public static class A implements Serializable {
+		private static final long serialVersionUID = 0;
+		
 		public Object fail = Arrays.asList("this", "will", "fail");
 		
 		private void writeObject(ObjectOutputStream out) throws IOException {
