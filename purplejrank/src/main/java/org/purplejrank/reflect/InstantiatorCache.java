@@ -7,6 +7,11 @@ import java.util.Map;
 
 import org.purplejrank.JrankConstants;
 
+/**
+ * Cache of instantiators
+ * @author robin
+ *
+ */
 public class InstantiatorCache {
 	private Map<Class<?>, Instantiator> cache = new HashMap<Class<?>, Instantiator>();
 	

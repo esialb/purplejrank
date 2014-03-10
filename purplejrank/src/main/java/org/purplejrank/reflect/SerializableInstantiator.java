@@ -8,6 +8,12 @@ import java.io.ObjectInputStream;
 import java.io.ObjectStreamClass;
 import java.lang.reflect.Proxy;
 
+/**
+ * {@link Instantiator} that writes a dummy object stream and fools
+ * {@link ObjectInputStream} into doing the native instantiation
+ * @author robin
+ *
+ */
 public class SerializableInstantiator implements Instantiator {
 	private static final byte[] header;
 	private static final byte[] footer;

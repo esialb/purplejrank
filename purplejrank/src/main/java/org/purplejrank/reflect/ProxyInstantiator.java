@@ -5,6 +5,11 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Proxy;
 
+/**
+ * {@link Instantiator} for {@link Proxy} classes
+ * @author robin
+ *
+ */
 public class ProxyInstantiator implements Instantiator {
 	private Constructor<?> ctor;
 	
