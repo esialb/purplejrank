@@ -331,7 +331,7 @@ public class PurpleJrankInput extends ObjectInputStream implements ObjectInput {
 					context.offerLast(new JrankContext(t, obj));
 					Method m = null;
 					try {
-						if(t.getType() != null)
+						if(t.getType() != null && !Enum.class.isAssignableFrom(t.getType()))
 							m = methodCache.get(t.getType(), "readObject", ObjectInputStream.class);
 					} catch(NoSuchMethodException e) {}
 					if(obj == null)
