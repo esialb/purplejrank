@@ -32,6 +32,12 @@ import org.objenesis.strategy.SerializingInstantiatorStrategy;
 import org.purplejrank.cache.FieldCache;
 import org.purplejrank.cache.MethodCache;
 
+/**
+ * Extension of {@link ObjectInputStream} with a protocol based on {@link ObjectInputStream},
+ * but slightly more robust.
+ * @author robin
+ *
+ */
 public class PurpleJrankInput extends ObjectInputStream implements ObjectInput {
 
 	protected ReadableByteChannel in;

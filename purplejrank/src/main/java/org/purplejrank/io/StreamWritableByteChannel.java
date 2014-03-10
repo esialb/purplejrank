@@ -6,6 +6,11 @@ import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.nio.channels.WritableByteChannel;
 
+/**
+ * {@link WritableByteChannel} backed by an {@link OutputStream}
+ * @author robin
+ *
+ */
 public class StreamWritableByteChannel implements WritableByteChannel, Flushable {
 	private OutputStream out;
 	private boolean open = true;

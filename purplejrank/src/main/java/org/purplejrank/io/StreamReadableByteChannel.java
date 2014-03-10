@@ -5,6 +5,11 @@ import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.nio.channels.ReadableByteChannel;
 
+/**
+ * {@link ReadableByteChannel} backed by an {@link InputStream}
+ * @author robin
+ *
+ */
 public class StreamReadableByteChannel implements ReadableByteChannel {
 	private InputStream in;
 	private boolean open = true;

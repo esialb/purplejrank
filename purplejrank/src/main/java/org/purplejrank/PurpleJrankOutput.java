@@ -23,6 +23,12 @@ import java.util.Map;
 import org.purplejrank.cache.FieldCache;
 import org.purplejrank.cache.MethodCache;
 
+/**
+ * Extension of {@link ObjectOutputStream} with a protocol based on {@link ObjectOutputStream}
+ * but slightly more robust.
+ * @author robin
+ *
+ */
 public class PurpleJrankOutput extends ObjectOutputStream implements ObjectOutput {
 	protected WritableByteChannel out;
 	protected ByteBuffer buf = ByteBuffer.allocateDirect(JrankConstants.MAX_BLOCK_SIZE);

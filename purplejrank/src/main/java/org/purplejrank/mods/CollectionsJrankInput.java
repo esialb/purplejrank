@@ -2,6 +2,7 @@ package org.purplejrank.mods;
 
 import java.io.IOException;
 import java.io.NotActiveException;
+import java.io.ObjectInputStream;
 import java.nio.channels.ReadableByteChannel;
 import java.util.Arrays;
 import java.util.List;
@@ -14,6 +15,12 @@ import org.purplejrank.JrankContext;
 import org.purplejrank.JrankGetFields;
 import org.purplejrank.PurpleJrankInput;
 
+/**
+ * Implementation of {@link ObjectInputStream} that deserializes all arrays
+ * to {@link List} and all objects to {@link Map}
+ * @author robin
+ *
+ */
 public class CollectionsJrankInput extends PurpleJrankInput {
 
 	public CollectionsJrankInput(ReadableByteChannel in) throws IOException {

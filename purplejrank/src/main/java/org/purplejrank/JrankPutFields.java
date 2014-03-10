@@ -6,6 +6,11 @@ import java.io.ObjectOutputStream.PutField;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * {@link PutField} for purple jrank
+ * @author robin
+ *
+ */
 public class JrankPutFields extends PutField {
 	
 	private Map<String, Object> values = new HashMap<String, Object>();

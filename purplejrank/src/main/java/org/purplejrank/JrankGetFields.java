@@ -6,6 +6,11 @@ import java.io.ObjectStreamClass;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * {@link GetField} for purple jrank
+ * @author robin
+ *
+ */
 public class JrankGetFields extends GetField {
 
 	private Map<String, Object> values = new HashMap<String, Object>();

@@ -1,5 +1,10 @@
 package org.purplejrank;
 
+/**
+ * A serialization or deserialization context.
+ * @author robin
+ *
+ */
 public class JrankContext {
 	public static final JrankContext NO_CONTEXT = new JrankContext();
 	

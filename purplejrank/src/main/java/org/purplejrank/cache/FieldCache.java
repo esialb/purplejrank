@@ -4,6 +4,11 @@ import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * Simple cache for class fields
+ * @author robin
+ *
+ */
 public class FieldCache {
 
 	private Map<Class<?>, Map<String, Field>> cache = new HashMap<Class<?>, Map<String,Field>>();

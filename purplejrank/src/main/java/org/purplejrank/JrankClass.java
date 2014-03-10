@@ -11,6 +11,11 @@ import java.util.Arrays;
 
 import org.purplejrank.cache.FieldCache;
 
+/**
+ * Representation of a class on the object stream.  Similar to {@link ObjectStreamClass}.
+ * @author robin
+ *
+ */
 public class JrankClass {
 	private boolean proxy;
 	private String[] proxyInterfaceNames;

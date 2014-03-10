@@ -1,5 +1,10 @@
 package org.purplejrank;
 
+/**
+ * Constants used when serializing or deserializing
+ * @author robin
+ *
+ */
 public class JrankConstants {
 	public static final int MAX_BLOCK_SIZE = 65536;
 	public static final int MAGIC = 0xdeadbeef;

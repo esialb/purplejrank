@@ -4,6 +4,11 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.ByteChannel;
 
+/**
+ * {@link ByteChannel} backed by a {@link ByteBuffer}
+ * @author robin
+ *
+ */
 public class ByteBufferByteChannel implements ByteChannel {
 
 	private boolean open = true;

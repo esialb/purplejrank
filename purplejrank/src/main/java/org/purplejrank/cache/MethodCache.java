@@ -5,6 +5,11 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * Simple cache for methods
+ * @author robin
+ *
+ */
 public class MethodCache {
 
 	private Map<Class<?>, Map<String, Method>> cache = new HashMap<Class<?>, Map<String,Method>>();
