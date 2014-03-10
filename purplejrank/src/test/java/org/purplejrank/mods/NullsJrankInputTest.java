@@ -20,7 +20,7 @@ public class NullsJrankInputTest {
 		private static final long serialVersionUID = 0;
 		
 		@SuppressWarnings("unused")
-		private int i = 1;
+		private Integer i = 1;
 		
 		private void writeObject(ObjectOutputStream out) throws IOException {
 			out.defaultWriteObject();
@@ -50,7 +50,7 @@ public class NullsJrankInputTest {
 			StreamWritableByteChannel ch = new StreamWritableByteChannel(bout);
 			ObjectOutputStream out = new PurpleJrankOutput(ch);
 			out.writeObject(new Missing());
-			out.writeObject(new Missing[0]);
+			out.writeObject(1);
 			out.close();
 		} catch(Exception e) {
 			Assume.assumeNoException(e);;
@@ -63,7 +63,7 @@ public class NullsJrankInputTest {
 		ObjectInputStream in = new NullsJrankInput(ch, new MissingMissingClassLoader());
 
 		Assert.assertNull(in.readObject());;
-		Assert.assertNull(in.readObject());;
+		Assert.assertEquals(1, in.readObject());
 
 		in.close();
 	}
