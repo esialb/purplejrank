@@ -291,7 +291,7 @@ public class PurpleJrankInput extends ObjectInputStream implements ObjectInput {
 			
 		case JrankConstants.OBJECT:
 			d = readClassDesc();
-			obj = instantiate(d);
+			obj = newOrdinaryObject(d);
 			handle = wired.size();
 			wired.add(obj);
 			
@@ -540,7 +540,7 @@ public class PurpleJrankInput extends ObjectInputStream implements ObjectInput {
 	}
 	
 	@SuppressWarnings({ "rawtypes", "unchecked" })
-	protected Object instantiate(JrankClass desc) {
+	protected Object newOrdinaryObject(JrankClass desc) {
 		if(desc.getType() == null)
 			return null;
 		
