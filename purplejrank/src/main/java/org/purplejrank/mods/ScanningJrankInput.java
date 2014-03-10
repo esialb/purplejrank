@@ -10,9 +10,11 @@ import java.util.List;
 import org.purplejrank.JrankClass;
 import org.purplejrank.PurpleJrankInput;
 
-public class ScanningJrankInput extends PurpleJrankInput {
+public class ScanningJrankInput extends NullsJrankInput {
 	
 	protected List<JrankClass> streamClasses;
+	protected List<JrankClass> resolvedClasses;
+	protected List<JrankClass> unresolvedClasses;
 
 	public ScanningJrankInput(InputStream in, ClassLoader cl)
 			throws IOException {
@@ -38,9 +40,17 @@ public class ScanningJrankInput extends PurpleJrankInput {
 		} catch(EOFException e) {
 		}
 		streamClasses = new ArrayList<JrankClass>();
+		resolvedClasses = new ArrayList<JrankClass>();
+		unresolvedClasses = new ArrayList<JrankClass>();
 		for(Object w : wired) {
-			if(w instanceof JrankClass)
-				streamClasses.add((JrankClass) w);
+			if(w instanceof JrankClass) {
+				JrankClass d = (JrankClass) w;
+				streamClasses.add(d);
+				if(d.getType() != null)
+					resolvedClasses.add(d);
+				else
+					unresolvedClasses.add(d);
+			}
 		}
 		return streamClasses;
 	}
@@ -50,11 +60,27 @@ public class ScanningJrankInput extends PurpleJrankInput {
 			throw new IllegalStateException("scan() not called");
 		return streamClasses;
 	}
+
+	public List<JrankClass> getResolvedClasses() {
+		if(resolvedClasses == null)
+			throw new IllegalStateException("scan() not called");
+		return resolvedClasses;
+	}
+	
+	public List<JrankClass> getUnresolvedClasses() {
+		if(unresolvedClasses == null)
+			throw new IllegalStateException("scan() not called");
+		return unresolvedClasses;
+	}
 	
 	@Override
-	protected Class<?> resolveClass(String name) throws IOException,
+	protected Object newOrdinaryObject(JrankClass desc) throws IOException,
 			ClassNotFoundException {
 		return null;
 	}
 	
+	@Override
+	protected Object newArray(JrankClass desc, int size) {
+		return null;
+	}
 }
