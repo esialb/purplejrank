@@ -70,6 +70,6 @@ From **Serializable**:
 From **Externalizable**:
 
     writeExternal(ObjectOutput)
-    **readExternal**(ObjectInput)
+    readExternal(ObjectInput)
 
 However, non-public (e.g. **protected**) methods of **ObjectOutputStream** and **ObjectInputStream** are not supported.  The have been declared **final** and **@Deprecated**, and throw **UnsupportedOperationException** if invoked.  Purple Jrank provides its own protected methods for customizing the object serialization or deserialization process.  Additionally, **PutField.write(ObjectOutput)** is not supported, and also declared **final** and **@Deprecated**.
