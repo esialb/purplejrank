@@ -1,18 +1,14 @@
 package org.purplejrank.mods;
 
 import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
 
 import org.junit.Assert;
-import org.junit.Assume;
 import org.junit.Test;
-import org.purplejrank.PurpleJrankOutput;
-import org.purplejrank.io.StreamReadableByteChannel;
-import org.purplejrank.io.StreamWritableByteChannel;
+import org.purplejrank.Util;
 import org.purplejrank.mods.CollectionsJrankInput;
 
 public class CollectionsJrankInputTest {
@@ -42,29 +38,20 @@ public class CollectionsJrankInputTest {
 			return cls;
 		}
 	}
+
+	private static Object cycle(Object obj) throws IOException, ClassNotFoundException {
+		byte[] buf = Util.serialize(obj);
+		ObjectInputStream in = new CollectionsJrankInput(
+				new ByteArrayInputStream(buf), 
+				new MissingMissingClassLoader());
+		obj = in.readObject();
+		in.close();
+		return obj;
+	}
 	
 	@Test
 	public void testCollections() throws Exception {
-		ByteArrayOutputStream bout = new ByteArrayOutputStream();
-		try {
-			StreamWritableByteChannel ch = new StreamWritableByteChannel(bout);
-			ObjectOutputStream out = new PurpleJrankOutput(ch);
-			out.writeObject(new Missing());
-			out.writeObject(new Missing[4]);
-			out.close();
-		} catch(Exception e) {
-			Assume.assumeNoException(e);;
-		}
-		
-		byte[] buf = bout.toByteArray();
-
-		ByteArrayInputStream bin = new ByteArrayInputStream(buf);
-		StreamReadableByteChannel ch = new StreamReadableByteChannel(bin);
-		ObjectInputStream in = new CollectionsJrankInput(ch, new MissingMissingClassLoader());
-
-		Assert.assertEquals("{-class=Lorg.purplejrank.mods.CollectionsJrankInputTest$Missing;, i=1}", in.readObject().toString());
-		Assert.assertEquals("[null, null, null, null]", in.readObject().toString());
-		
-		in.close();
+		Assert.assertEquals("{-class=Lorg.purplejrank.mods.CollectionsJrankInputTest$Missing;, i=1}", cycle(new Missing()).toString());
+		Assert.assertEquals("[null, null, null, null]", cycle(new Missing[4]).toString());
 	}
 }

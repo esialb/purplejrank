@@ -1,11 +1,6 @@
 package org.purplejrank;
 
-import java.io.ByteArrayOutputStream;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.io.Serializable;
-import java.nio.ByteBuffer;
-import java.nio.channels.ReadableByteChannel;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -19,8 +14,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
-import org.purplejrank.io.ByteBufferByteChannel;
-import org.purplejrank.io.StreamWritableByteChannel;
 
 @RunWith(Parameterized.class)
 public class PurpleJrankTest implements Serializable {
@@ -67,25 +60,18 @@ public class PurpleJrankTest implements Serializable {
 
 	@Test
 	public void testWrite() throws Exception {
-		StreamWritableByteChannel ch = new StreamWritableByteChannel(new ByteArrayOutputStream());
-		ObjectOutputStream out = new PurpleJrankOutput(ch);
-		out.writeObject(obj);
-		out.close();
+		Util.serialize(obj);
 	}
 	
 	@Test
 	public void testRead() throws Exception {
-		ByteArrayOutputStream bout = new ByteArrayOutputStream();
+		byte[] buf;
 		try {
-			StreamWritableByteChannel ch = new StreamWritableByteChannel(bout);
-			ObjectOutputStream out = new PurpleJrankOutput(ch);
-			out.writeObject(obj);
-			out.close();
+			buf = Util.serialize(obj);
 		} catch(Exception e) {
 			Assume.assumeNoException(e);;
+			throw new InternalError();
 		}
-		
-		byte[] buf = bout.toByteArray();
 /*		
 		int pos = 0;
 		while(pos < buf.length) {
@@ -102,12 +88,7 @@ public class PurpleJrankTest implements Serializable {
 		}
 */
 		
-//		ByteArrayInputStream bin = new ByteArrayInputStream(buf);
-//		StreamReadableByteChannel ch = new StreamReadableByteChannel(bin);
-		ReadableByteChannel ch = new ByteBufferByteChannel(ByteBuffer.wrap(buf));
-		ObjectInputStream in = new PurpleJrankInput(ch);
-		Object actual = in.readObject();
-		in.close();
+		Object actual = Util.deserialize(buf);
 		Assert.assertEquals(obj, actual);;
 	}
 }

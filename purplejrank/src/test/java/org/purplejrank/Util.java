@@ -16,9 +16,21 @@ public class Util {
 	}
 	
 	public static Object cycle(Object obj) throws IOException, ClassNotFoundException {
-		ByteArrayInputStream bin = new ByteArrayInputStream(serialize(obj));
-		ObjectInputStream in = new PurpleJrankInput(bin);
-		obj = in.readObject();
+		return cycle(obj, Util.class.getClassLoader());
+	}
+	
+	public static Object cycle(Object obj, ClassLoader cl) throws IOException, ClassNotFoundException {
+		return deserialize(serialize(obj), cl);
+	}
+	
+	public static Object deserialize(byte[] buf) throws IOException, ClassNotFoundException {
+		return deserialize(buf, Util.class.getClassLoader());
+	}
+	
+	public static Object deserialize(byte[] buf, ClassLoader cl) throws IOException, ClassNotFoundException {
+		ByteArrayInputStream bin = new ByteArrayInputStream(buf);
+		ObjectInputStream in = new PurpleJrankInput(bin, cl);
+		Object obj = in.readObject();
 		in.close();
 		return obj;
 	}

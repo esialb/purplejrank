@@ -1,6 +1,7 @@
 package org.purplejrank.mods;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.nio.channels.ReadableByteChannel;
 
@@ -21,6 +22,14 @@ public class NullsJrankInput extends PurpleJrankInput {
 
 	public NullsJrankInput(ReadableByteChannel in, ClassLoader cl) throws IOException {
 		super(in, cl);
+	}
+
+	public NullsJrankInput(InputStream in, ClassLoader cl) throws IOException {
+		super(in, cl);
+	}
+
+	public NullsJrankInput(InputStream in) throws IOException {
+		super(in);
 	}
 
 	@Override

@@ -43,13 +43,6 @@ public class TestJDKUnparseableStream {
 	
 	@Test
 	public void testJrankSucceeds() throws Exception {
-		ByteArrayOutputStream bout = new ByteArrayOutputStream();
-		ObjectOutputStream out = new PurpleJrankOutput(bout);
-		out.writeObject(new A());
-		out.close();
-		
-		ObjectInputStream in = new PurpleJrankInput(new ByteArrayInputStream(bout.toByteArray()));
-		in.readObject();
-		in.close();
+		Util.cycle(new A());
 	}
 }
