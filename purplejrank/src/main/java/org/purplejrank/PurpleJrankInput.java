@@ -111,6 +111,21 @@ public class PurpleJrankInput extends ObjectInputStream implements ObjectInput {
 		return v << shift;
 	}
 
+	private long readEscapedLong() throws IOException {
+		return readEscapedLong(0);
+	}
+	
+	private long readEscapedLong(int shift) throws IOException {
+		ensureOpen().ensureAvailable(1);
+		long v = 0xff & buf.get();
+		boolean more = (v & 0x80) != 0;
+		v &= 0x7f;
+		if(more) {
+			v |= readEscapedLong(shift + 7);
+		}
+		return v << shift;
+	}
+
 	@Override
 	public void readFully(byte[] b) throws IOException {
 		read(b);
@@ -389,6 +404,7 @@ public class PurpleJrankInput extends ObjectInputStream implements ObjectInput {
 			
 		case JrankConstants.CLASSDESC:
 			String name = readUTF(false);
+			long serialVersion = readEscapedLong();
 			byte flags = ensureAvailable(1).get();
 			short nfields = ensureAvailable(2).getShort();
 			String[] fieldNames = new String[nfields];
@@ -410,7 +426,7 @@ public class PurpleJrankInput extends ObjectInputStream implements ObjectInput {
 			d.setFieldNames(fieldNames);
 			d.setFieldTypes(fieldTypes);
 
-			d.setType(resolveClass(d.getName()));
+			d.setType(resolveClass(d));
 			Field[] fields = new Field[nfields];
 			int fc = 0;
 			for(int i = 0; i < nfields; i++) {
@@ -448,6 +464,16 @@ public class PurpleJrankInput extends ObjectInputStream implements ObjectInput {
 			cls = cls.getSuperclass();
 		}
 		return null;
+	}
+	
+	protected Class<?> resolveClass(JrankClass desc) throws IOException, ClassNotFoundException {
+		Class<?> cls = resolveClass(desc.getName());
+		if(cls == null)
+			return null;
+		long clsv = ObjectStreamClass.lookupAny(cls).getSerialVersionUID();
+		if(clsv != desc.getSerialVersion())
+			throw new ClassNotFoundException("Mismatched serialVersionUID: stream:" + desc.getSerialVersion() + " local:" + clsv);
+		return cls;
 	}
 	
 	protected Class<?> resolveClass(String name) throws IOException,

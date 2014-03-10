@@ -7,6 +7,7 @@ import java.io.NotActiveException;
 import java.io.NotSerializableException;
 import java.io.ObjectOutput;
 import java.io.ObjectOutputStream;
+import java.io.ObjectStreamClass;
 import java.io.Serializable;
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
@@ -126,6 +127,15 @@ public class PurpleJrankOutput extends ObjectOutputStream implements ObjectOutpu
 			buf.put((byte)v);
 	}
 
+	private void writeEscapedLong(long v) throws IOException {
+		ensureCapacity(1);
+		if((v & 0x7f) != v) {
+			buf.put((byte)(0x80 | (0x7f & v)));
+			writeEscapedLong(v >>> 7);
+		} else
+			buf.put((byte)v);
+	}
+	
 	@Override
 	public void writeUTF(String s) throws IOException {
 		writeUTF(s, true);
@@ -270,6 +280,7 @@ public class PurpleJrankOutput extends ObjectOutputStream implements ObjectOutpu
 		} else {
 			ensureCapacity(1).put(JrankConstants.CLASSDESC);
 			writeUTF(d.getName(), false);
+			writeEscapedLong(ObjectStreamClass.lookupAny(cls).getSerialVersionUID());
 			ensureCapacity(3).put(d.getFlags()).putShort((short) d.getFieldNames().length);
 			for(int i = 0; i < d.getFieldNames().length; i++) {
 				ensureCapacity(1).put((byte) d.getFieldTypes()[i].charAt(0));

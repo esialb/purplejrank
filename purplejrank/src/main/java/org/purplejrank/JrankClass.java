@@ -2,6 +2,7 @@ package org.purplejrank;
 
 import java.io.Externalizable;
 import java.io.ObjectOutputStream;
+import java.io.ObjectStreamClass;
 import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
@@ -13,6 +14,7 @@ public class JrankClass {
 	private String[] proxyInterfaceNames;
 	private byte flags;
 	private String name;
+	private long serialVersion;
 	private String[] fieldNames;
 	private String[] fieldTypes;
 	private JrankClass parent;
@@ -35,9 +37,11 @@ public class JrankClass {
 				proxyInterfaceNames[i] = ifcs[i].getName();
 		} else if(cls.isArray()) {
 			name = className(cls);
+			serialVersion = ObjectStreamClass.lookupAny(cls).getSerialVersionUID();
 			setFieldFields(cls);
 		} else {
 			name = "L" + cls.getName() + ";";
+			serialVersion = ObjectStreamClass.lookupAny(cls).getSerialVersionUID();
 			setFieldFields(cls);
 		}
 	}
@@ -116,6 +120,9 @@ public class JrankClass {
 	public String getName() {
 		return name;
 	}
+	public long getSerialVersion() {
+		return serialVersion;
+	}
 	public String[] getFieldNames() {
 		return fieldNames;
 	}
@@ -149,6 +156,10 @@ public class JrankClass {
 		this.name = name;
 	}
 
+	void setSerialVersion(long serialVersion) {
+		this.serialVersion = serialVersion;
+	}
+	
 	void setFieldNames(String[] fieldNames) {
 		this.fieldNames = fieldNames;
 	}
