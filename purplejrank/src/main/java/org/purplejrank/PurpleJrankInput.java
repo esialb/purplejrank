@@ -105,10 +105,11 @@ public class PurpleJrankInput extends ObjectInputStream implements ObjectInput {
 		int v = 0xff & buf.get();
 		boolean more = (v & 0x80) != 0;
 		v &= 0x7f;
+		v <<= shift;
 		if(more) {
 			v |= readEscapedInt(shift + 7);
 		}
-		return v << shift;
+		return v;
 	}
 
 	private long readEscapedLong() throws IOException {
@@ -120,10 +121,11 @@ public class PurpleJrankInput extends ObjectInputStream implements ObjectInput {
 		long v = 0xff & buf.get();
 		boolean more = (v & 0x80) != 0;
 		v &= 0x7f;
+		v <<= shift;
 		if(more) {
 			v |= readEscapedLong(shift + 7);
 		}
-		return v << shift;
+		return v;
 	}
 
 	@Override
@@ -422,6 +424,7 @@ public class PurpleJrankInput extends ObjectInputStream implements ObjectInput {
 			
 			d.setProxy(false);
 			d.setName(name);
+			d.setSerialVersion(serialVersion);
 			d.setFlags(flags);
 			d.setFieldNames(fieldNames);
 			d.setFieldTypes(fieldTypes);
