@@ -310,9 +310,9 @@ public class PurpleJrankInput extends ObjectInputStream implements ObjectInput {
 
 		case JrankConstants.ENUM:
 			d = readClassDesc();
-			wired.add(obj);
 			String name = (String) readObject0(true);
 			obj = Enum.valueOf(d.getType().asSubclass(Enum.class), name);
+			wired.add(obj);
 			break;
 
 		case JrankConstants.OBJECT:
