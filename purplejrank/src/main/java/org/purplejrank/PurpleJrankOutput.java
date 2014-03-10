@@ -239,9 +239,9 @@ public class PurpleJrankOutput extends ObjectOutputStream implements ObjectOutpu
 		if(obj instanceof Enum<?>) {
 			ensureCapacity(1).put(JrankConstants.ENUM);
 			writeClassDesc(obj.getClass());
+			writeObject(((Enum<?>) obj).name());
 			if(!wired.containsKey(obj))
 				wired.put(obj, nextHandle++);
-			writeObject(((Enum<?>) obj).name());
 		}
 		
 		ensureCapacity(1).put(JrankConstants.OBJECT);
