@@ -11,6 +11,7 @@ import java.io.StreamCorruptedException;
 
 import org.junit.Assert;
 import org.junit.Test;
+import org.purplejrank.reflect.SerializableInstantiator;
 
 public class TestJDKUnparseableStream {
 	/**
@@ -54,6 +55,11 @@ public class TestJDKUnparseableStream {
 		}
 	}
 
+	/**
+	 * This class is needed solely for the {@link SerializableInstantiator}.
+	 * @author robin
+	 *
+	 */
 	public static class B extends A {
 		private static final long serialVersionUID = 0;
 	}
