@@ -56,7 +56,7 @@ public class PurpleJrankOutput extends ObjectOutputStream implements ObjectOutpu
 	
 	protected PurpleJrankOutput ensureOpen() throws IOException {
 		if(!out.isOpen())
-			throw new IOException("channel closed");
+			throw new JrankStreamException("channel closed");
 		return this;
 	}
 	
@@ -197,7 +197,7 @@ public class PurpleJrankOutput extends ObjectOutputStream implements ObjectOutpu
 			try {
 				obj = writeReplace.invoke(obj);
 			} catch(Exception ex) {
-				throw new IOException(ex);
+				throw new JrankStreamException(ex);
 			}
 		}
 		
@@ -259,7 +259,7 @@ public class PurpleJrankOutput extends ObjectOutputStream implements ObjectOutpu
 						Method m = methodCache.get(t.getType(), "writeObject", ObjectOutputStream.class);
 						m.invoke(obj, this);
 					} catch(Exception e) {
-						throw new IOException(e);
+						throw new JrankStreamException(e);
 					}
 				} else {
 					defaultWriteObject();
@@ -394,7 +394,7 @@ public class PurpleJrankOutput extends ObjectOutputStream implements ObjectOutpu
 				pf.put(f.getName(), f.get(ctx.getObject()));
 			}
 		} catch(Exception e) {
-			throw new IOException(e);
+			throw new JrankStreamException(e);
 		}
 		return pf;
 	}
@@ -421,7 +421,7 @@ public class PurpleJrankOutput extends ObjectOutputStream implements ObjectOutpu
 			} catch(IOException ioe) {
 				throw ioe;
 			} catch(Exception e) {
-				throw new IOException(e);
+				throw new JrankStreamException(e);
 			}
 		}
 		setBlockMode(false).ensureCapacity(1).put(JrankConstants.WALL);

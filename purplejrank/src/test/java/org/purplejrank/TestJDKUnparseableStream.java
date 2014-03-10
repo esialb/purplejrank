@@ -5,6 +5,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.io.ObjectStreamException;
 import java.io.Serializable;
 import java.io.StreamCorruptedException;
 import java.util.Arrays;
@@ -15,34 +16,41 @@ import org.junit.Test;
 public class TestJDKUnparseableStream {
 	public static class A implements Serializable {
 		private static final long serialVersionUID = 0;
-		
-		public Object fail = Arrays.asList("this", "will", "fail");
-		
+
+		public byte fail = 0x70;
+
 		private void writeObject(ObjectOutputStream out) throws IOException {
-			
+			out.defaultWriteObject();
+		}
+
+		private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
+			in.readObject(); // interprets the "fail" byte as a null object reference
 		}
 	}
-	
+
+	public static class B extends A {
+		private static final long serialVersionUID = 0;
+	}
+
 	@Test
-	public void testJdkFails() throws Exception {
+	public void testJdkFailsToFail() throws Exception {
 		ByteArrayOutputStream bout = new ByteArrayOutputStream();
 		ObjectOutputStream out = new ObjectOutputStream(bout);
-		out.writeObject(new A());
+		out.writeObject(new B());
 		out.close();
-		
+
 		ObjectInputStream in = new ObjectInputStream(new ByteArrayInputStream(bout.toByteArray()));
-		try {
-			in.readObject();
-			Assert.fail();
-		} catch(StreamCorruptedException e) {
-			// expected
-		} finally {
-			in.close();
-		}
+		in.readObject(); // this would fail if JDK streams weren't ambiguous
+		in.close();
 	}
-	
+
 	@Test
-	public void testJrankSucceeds() throws Exception {
-		Util.cycle(new A());
+	public void testJrankSucceedsToFail() throws Exception {
+		try {
+			Util.cycle(new B());
+			Assert.fail();
+		} catch(ObjectStreamException e) {
+			// expected
+		}
 	}
 }

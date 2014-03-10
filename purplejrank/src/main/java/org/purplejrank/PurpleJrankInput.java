@@ -13,6 +13,7 @@ import java.io.ObjectStreamClass;
 import java.io.StreamCorruptedException;
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.Proxy;
@@ -76,13 +77,13 @@ public class PurpleJrankInput extends ObjectInputStream implements ObjectInput {
 		int magic = buf.getInt();
 		int version = buf.getInt();
 		if(magic != JrankConstants.MAGIC)
-			throw new IOException("invalid magic");
+			throw new JrankStreamException("invalid magic");
 		if(version != JrankConstants.VERSION)
-			throw new IOException("invalid version");
+			throw new JrankStreamException("invalid version");
 	}
 	
 	protected PurpleJrankInput ensureOpen() throws IOException {
-		if(!in.isOpen()) throw new IOException("channel closed");
+		if(!in.isOpen()) throw new JrankStreamException("channel closed");
 		return this;
 	}
 	
@@ -343,7 +344,7 @@ public class PurpleJrankInput extends ObjectInputStream implements ObjectInput {
 							m.invoke(obj, this);
 						} catch(NoSuchMethodException e) {
 						} catch(Exception ex) {
-							throw new IOException(ex);
+							throw new JrankStreamException(ex);
 						}
 						skipOptionalData();
 					} else {
@@ -363,7 +364,7 @@ public class PurpleJrankInput extends ObjectInputStream implements ObjectInput {
 							m.invoke(obj);
 						} catch(NoSuchMethodException e) {
 						} catch(Exception ex) {
-							throw new IOException(ex);
+							throw new JrankStreamException(ex);
 						}
 					}
 					unrestored = unrestored.getSuperclass();
@@ -376,7 +377,7 @@ public class PurpleJrankInput extends ObjectInputStream implements ObjectInput {
 					obj = m.invoke(obj);
 					wired.set(handle, obj);
 				} catch(Exception e) {
-					throw new IOException(e);
+					throw new JrankStreamException(e);
 				}
 			}
 			
@@ -430,13 +431,13 @@ public class PurpleJrankInput extends ObjectInputStream implements ObjectInput {
 			else
 				i = new SerializableInstantiator(cls);
 		} catch(NoSuchMethodException e) {
-			throw new IOException(e);
+			throw new JrankStreamException(e);
 		}
 		Object clone;
 		try {
 			clone = i.newInstance();
 		} catch(Exception e) {
-			throw new IOException(e);
+			throw new JrankStreamException(e);
 		}
 		for(; cls != null; cls = cls.getSuperclass()) {
 			Field[] fields = fieldCache.get(cls);
@@ -611,7 +612,7 @@ public class PurpleJrankInput extends ObjectInputStream implements ObjectInput {
 		try {
 			return instantiatorCache.get(desc.getType(), desc.getFlags()).newInstance();
 		} catch(NoSuchMethodException e) {
-			throw new IOException(e);
+			throw new JrankStreamException(e);
 		}
 	}
 	
@@ -676,7 +677,7 @@ public class PurpleJrankInput extends ObjectInputStream implements ObjectInput {
 		try {
 			f.set(obj, fields.get(f.getName(), null));
 		} catch (Exception e) {
-			throw new IOException(e);
+			throw new JrankStreamException(e);
 		}
 	}
 	
