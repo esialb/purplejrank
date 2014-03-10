@@ -9,6 +9,7 @@ import java.nio.channels.WritableByteChannel;
 public class StreamWritableByteChannel implements WritableByteChannel, Flushable {
 	private OutputStream out;
 	private boolean open = true;
+	private byte[] buf = new byte[8192];
 	
 	public StreamWritableByteChannel(OutputStream out) {
 		this.out = out;
@@ -27,10 +28,14 @@ public class StreamWritableByteChannel implements WritableByteChannel, Flushable
 
 	@Override
 	public int write(ByteBuffer src) throws IOException {
-		byte[] buf = new byte[src.limit() - src.position()];
-		src.get(buf);
-		out.write(buf);
-		return buf.length;
+		int count = 0;
+		while(src.remaining() > 0) {
+			int r = Math.min(buf.length, src.remaining());
+			src.get(buf, 0, r);
+			out.write(buf, 0, r);
+			count += r;
+		}
+		return count;
 	}
 
 	@Override

@@ -8,6 +8,7 @@ import java.nio.channels.ReadableByteChannel;
 public class StreamReadableByteChannel implements ReadableByteChannel {
 	private InputStream in;
 	private boolean open = true;
+	private byte[] buf = new byte[8192];
 	
 	public StreamReadableByteChannel(InputStream in) {
 		this.in = in;
@@ -27,12 +28,13 @@ public class StreamReadableByteChannel implements ReadableByteChannel {
 	@Override
 	public int read(ByteBuffer dst) throws IOException {
 		int count = 0;
-		while(dst.position() < dst.limit()) {
-			int b = in.read();
-			if(b == -1)
-				return count;
-			dst.put((byte) b);
-			count++;
+		while(dst.remaining() > 0) {
+			int r = in.read(buf, 0, Math.min(buf.length, dst.remaining()));
+			if(r > 0) {
+				dst.put(buf, 0, r);
+				count += r;
+			} else
+				break;
 		}
 		return count;
 	}
