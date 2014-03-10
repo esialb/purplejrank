@@ -335,11 +335,12 @@ public class PurpleJrankInput extends ObjectInputStream implements ObjectInput {
 					context.offerLast(new JrankContext(t, obj));
 					Method m = null;
 					try {
-						m = methodCache.get(t.getType(), "readObject", ObjectInputStream.class);
+						if(t.getType() != null)
+							m = methodCache.get(t.getType(), "readObject", ObjectInputStream.class);
 					} catch(NoSuchMethodException e) {}
 					if(obj == null)
 						skipOptionalData();
-					if(t.getType() == null || !t.getType().isInstance(obj))
+					else if(t.getType() == null || !t.getType().isInstance(obj))
 						skipOptionalData();
 					else if(m != null) {
 						restoredClasses.add(t.getType());
