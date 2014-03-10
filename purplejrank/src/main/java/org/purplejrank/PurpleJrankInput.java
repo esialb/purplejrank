@@ -473,10 +473,14 @@ public class PurpleJrankInput extends ObjectInputStream implements ObjectInput {
 		Class<?> cls = resolveClass(desc.getName());
 		if(cls == null)
 			return null;
+		checkSerialVersion(desc, cls);
+		return cls;
+	}
+	
+	protected void checkSerialVersion(JrankClass desc, Class<?> cls) throws ClassNotFoundException {
 		long clsv = ObjectStreamClass.lookupAny(cls).getSerialVersionUID();
 		if(clsv != desc.getSerialVersion())
 			throw new ClassNotFoundException("Mismatched serialVersionUID: stream:" + desc.getSerialVersion() + " local:" + clsv);
-		return cls;
 	}
 	
 	protected Class<?> resolveClass(String name) throws IOException,
