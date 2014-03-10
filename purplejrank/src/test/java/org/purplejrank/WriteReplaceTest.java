@@ -11,6 +11,7 @@ import org.junit.Test;
 
 public class WriteReplaceTest {
 	public static class A implements Serializable {
+		private static final long serialVersionUID = 0;
 		private Object writeReplace() {
 			return "A";
 		}

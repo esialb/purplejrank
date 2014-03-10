@@ -11,6 +11,7 @@ import org.junit.Test;
 
 public class ReadResolveTest {
 	public static class A implements Serializable {
+		private static final long serialVersionUID = 0;
 		private Object readResolve() {
 			return "A";
 		}
