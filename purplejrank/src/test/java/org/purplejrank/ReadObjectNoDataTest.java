@@ -5,7 +5,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
-import java.nio.channels.WritableByteChannel;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -25,6 +24,7 @@ public class ReadObjectNoDataTest {
 		private static final long serialVersionUID = 0;
 		public int foo = 0;
 		
+		@SuppressWarnings("unused")
 		private void readObjectNoData() {
 			foo = 1;
 		}
