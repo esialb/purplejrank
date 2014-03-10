@@ -64,9 +64,9 @@ public class JrankPutFields extends PutField {
 		values.put(name, val);
 	}
 
+	@Deprecated
 	@Override
-	public void write(ObjectOutput out) throws IOException {
-		// TODO Auto-generated method stub
+	public final void write(ObjectOutput out) throws IOException {
 		throw new UnsupportedOperationException();
 	}
 
