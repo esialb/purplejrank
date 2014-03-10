@@ -27,6 +27,7 @@ public class PurpleJrankOutput extends ObjectOutputStream implements ObjectOutpu
 	protected boolean blockMode = false;
 	protected ByteBuffer blockHeader = ByteBuffer.allocateDirect(5);
 	
+	protected FieldCache fieldCache = new FieldCache();
 	protected Map<Object, Integer> wired = new IdentityHashMap<Object, Integer>();
 	protected Map<Class<?>, JrankClass> classdesc = new IdentityHashMap<Class<?>, JrankClass>();
 	protected Deque<JrankContext> context = new ArrayDeque<JrankContext>(Arrays.asList(JrankContext.NO_CONTEXT));
@@ -270,7 +271,7 @@ public class PurpleJrankOutput extends ObjectOutputStream implements ObjectOutpu
 		
 		JrankClass d;
 		wired.put(cls, wired.size());
-		classdesc.put(cls, d = new JrankClass(cls));
+		classdesc.put(cls, d = new JrankClass(cls, fieldCache));
 		
 		if(d.isProxy()) {
 			ensureCapacity(1).put(JrankConstants.PROXYCLASSDESC);

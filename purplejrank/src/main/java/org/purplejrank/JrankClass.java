@@ -24,7 +24,7 @@ public class JrankClass {
 	
 	JrankClass() {}
 	
-	public JrankClass(Class<?> cls) {
+	public JrankClass(Class<?> cls, FieldCache fieldCache) {
 		this.type = cls;
 		
 		if(cls.isPrimitive()) {
@@ -38,15 +38,15 @@ public class JrankClass {
 		} else if(cls.isArray()) {
 			name = className(cls);
 			serialVersion = ObjectStreamClass.lookupAny(cls).getSerialVersionUID();
-			setFieldFields(cls);
+			setFieldFields(cls, fieldCache);
 		} else {
 			name = "L" + cls.getName() + ";";
 			serialVersion = ObjectStreamClass.lookupAny(cls).getSerialVersionUID();
-			setFieldFields(cls);
+			setFieldFields(cls, fieldCache);
 		}
 	}
 	
-	private void setFieldFields(Class<?> cls) {
+	private void setFieldFields(Class<?> cls, FieldCache fieldCache) {
 		flags = 0;
 		if(Enum.class.isAssignableFrom(cls))
 			flags = JrankConstants.SC_WRITE_ENUM;
@@ -61,8 +61,7 @@ public class JrankClass {
 					flags = JrankConstants.SC_WRITE_FIELDS;
 			}
 		}
-		fields = cls.getDeclaredFields();
-		Field.setAccessible(fields, true);
+		fields = fieldCache.get(cls);
 		fieldNames = new String[fields.length];
 		fieldTypes = new String[fields.length];
 		int fi = 0;
