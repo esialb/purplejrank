@@ -21,9 +21,9 @@ import java.util.Deque;
 import java.util.IdentityHashMap;
 import java.util.Map;
 
-import org.purplejrank.cache.FieldCache;
-import org.purplejrank.cache.MethodCache;
 import org.purplejrank.io.StreamWritableByteChannel;
+import org.purplejrank.reflect.FieldCache;
+import org.purplejrank.reflect.MethodCache;
 
 /**
  * Extension of {@link ObjectOutputStream} with a protocol based on {@link ObjectOutputStream}

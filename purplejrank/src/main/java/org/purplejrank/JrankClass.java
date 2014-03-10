@@ -9,7 +9,7 @@ import java.lang.reflect.Modifier;
 import java.lang.reflect.Proxy;
 import java.util.Arrays;
 
-import org.purplejrank.cache.FieldCache;
+import org.purplejrank.reflect.FieldCache;
 
 /**
  * Representation of a class on the object stream.  Similar to {@link ObjectStreamClass}.

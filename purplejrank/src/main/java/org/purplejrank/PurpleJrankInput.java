@@ -27,12 +27,13 @@ import java.util.NavigableMap;
 import java.util.Set;
 import java.util.TreeMap;
 
-import org.objenesis.ObjenesisHelper;
-import org.objenesis.instantiator.basic.ConstructorInstantiator;
-import org.objenesis.strategy.SerializingInstantiatorStrategy;
-import org.purplejrank.cache.FieldCache;
-import org.purplejrank.cache.MethodCache;
 import org.purplejrank.io.StreamReadableByteChannel;
+import org.purplejrank.reflect.FieldCache;
+import org.purplejrank.reflect.Instantiator;
+import org.purplejrank.reflect.InstantiatorCache;
+import org.purplejrank.reflect.MethodCache;
+import org.purplejrank.reflect.ProxyInstantiator;
+import org.purplejrank.reflect.SerializableInstantiator;
 
 /**
  * Extension of {@link ObjectInputStream} with a protocol based on {@link ObjectInputStream},
@@ -49,6 +50,7 @@ public class PurpleJrankInput extends ObjectInputStream implements ObjectInput {
 	protected ClassLoader cl;
 	protected FieldCache fieldCache = new FieldCache();
 	protected MethodCache methodCache = new MethodCache();
+	protected InstantiatorCache instantiatorCache = new InstantiatorCache();
 	protected List<Object> wired = new ArrayList<Object>();
 	protected Deque<JrankContext> context = new ArrayDeque<JrankContext>(Arrays.asList(JrankContext.NO_CONTEXT));
 	protected NavigableMap<Integer, List<ObjectInputValidation>> validation = new TreeMap<Integer, List<ObjectInputValidation>>();
@@ -414,9 +416,24 @@ public class PurpleJrankInput extends ObjectInputStream implements ObjectInput {
 		}
 	}
 	
-	protected Object clone(Object obj) {
-		Object clone = ObjenesisHelper.newInstance(obj.getClass());
-		for(Class<?> cls = obj.getClass(); cls != null; cls = cls.getSuperclass()) {
+	protected Object clone(Object obj) throws IOException {
+		Instantiator i;
+		Class<?> cls = obj.getClass();
+		try {
+			if(Proxy.isProxyClass(cls))
+				i = new ProxyInstantiator(cls);
+			else
+				i = new SerializableInstantiator(cls);
+		} catch(NoSuchMethodException e) {
+			throw new IOException(e);
+		}
+		Object clone;
+		try {
+			clone = i.newInstance();
+		} catch(Exception e) {
+			throw new IOException(e);
+		}
+		for(; cls != null; cls = cls.getSuperclass()) {
 			Field[] fields = fieldCache.get(cls);
 			for(Field f : fields) {
 				if(Modifier.isStatic(f.getModifiers()) || Modifier.isTransient(f.getModifiers()))
@@ -579,14 +596,15 @@ public class PurpleJrankInput extends ObjectInputStream implements ObjectInput {
 		return Proxy.getProxyClass(cl, ifcs);
 	}
 	
-	@SuppressWarnings({ "rawtypes", "unchecked" })
-	protected Object newOrdinaryObject(JrankClass desc) {
+	protected Object newOrdinaryObject(JrankClass desc) throws IOException, ClassNotFoundException {
 		if(desc.getType() == null)
 			return null;
 		
-		if(desc.getFlags() == JrankConstants.SC_WRITE_EXTERNAL)
-			return new ConstructorInstantiator(desc.getType()).newInstance();
-		return new SerializingInstantiatorStrategy().newInstantiatorOf(desc.getType()).newInstance();
+		try {
+			return instantiatorCache.get(desc.getType(), desc.getFlags()).newInstance();
+		} catch(NoSuchMethodException e) {
+			throw new IOException(e);
+		}
 	}
 	
 	@Override
