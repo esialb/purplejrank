@@ -141,43 +141,43 @@ public class JrankClass {
 		return fields;
 	}
 
-	void setProxy(boolean proxy) {
+	protected void setProxy(boolean proxy) {
 		this.proxy = proxy;
 	}
 
-	void setProxyInterfaceNames(String[] proxyInterfaceNames) {
+	protected void setProxyInterfaceNames(String[] proxyInterfaceNames) {
 		this.proxyInterfaceNames = proxyInterfaceNames;
 	}
 
-	void setFlags(byte flags) {
+	protected void setFlags(byte flags) {
 		this.flags = flags;
 	}
 
-	void setName(String name) {
+	protected void setName(String name) {
 		this.name = name;
 	}
 
-	void setSerialVersion(long serialVersion) {
+	protected void setSerialVersion(long serialVersion) {
 		this.serialVersion = serialVersion;
 	}
 	
-	void setFieldNames(String[] fieldNames) {
+	protected void setFieldNames(String[] fieldNames) {
 		this.fieldNames = fieldNames;
 	}
 
-	void setFieldTypes(String[] fieldTypes) {
+	protected void setFieldTypes(String[] fieldTypes) {
 		this.fieldTypes = fieldTypes;
 	}
 
-	void setParent(JrankClass parent) {
+	protected void setParent(JrankClass parent) {
 		this.parent = parent;
 	}
 
-	void setType(Class<?> type) {
+	protected void setType(Class<?> type) {
 		this.type = type;
 	}
 
-	void setFields(Field[] fields) {
+	protected void setFields(Field[] fields) {
 		this.fields = fields;
 	}
 }
