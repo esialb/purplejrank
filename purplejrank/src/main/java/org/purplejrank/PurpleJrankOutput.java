@@ -192,6 +192,9 @@ public class PurpleJrankOutput extends ObjectOutputStream implements ObjectOutpu
 			return;
 		}
 		
+		int handle;
+		Object preReplace = obj;
+		
 		Method writeReplace = findWriteReplace(obj);
 		if(writeReplace != null) {
 			try {
@@ -243,8 +246,10 @@ public class PurpleJrankOutput extends ObjectOutputStream implements ObjectOutpu
 		
 		ensureCapacity(1).put(JrankConstants.OBJECT);
 		JrankClass d = writeClassDesc(obj.getClass());
-		if(!wired.containsKey(obj))
-			wired.put(obj, wired.size());
+		if(!wired.containsKey(obj)) {
+			wired.put(obj, handle = wired.size());
+			wired.put(preReplace, handle);
+		}
 		
 		if(d.getFlags() == JrankConstants.SC_WRITE_EXTERNAL) {
 			context.offerLast(new JrankContext(d, obj));
