@@ -6,17 +6,17 @@ Purple Jrank is a more robust way to serialize objects than the JDK's **ObjectOu
 Purple Jrank is built and deployed with Apache Maven.  Right now it isn't on Maven Central, so you'll have to add the development repository.
 
 The repository:
-	<repository>
-		<id>purplejrank</id>
-		<url>http://repo.purplejrank.org/</url>
-	</repository>
+    <repository>
+        <id>purplejrank</id>
+        <url>http://repo.purplejrank.org/</url>
+    </repository>
 
 The artifact itself:
-	<dependency>
-		<groupId>org.purplejrank</groupId>
-		<artifactId>purplejrank</artifactId>
-		<version>0.0.1-SNAPSHOT</version>
-	</dependency>
+    <dependency>
+        <groupId>org.purplejrank</groupId>
+        <artifactId>purplejrank</artifactId>
+        <version>0.0.1-SNAPSHOT</version>
+    </dependency>
 
 ## Why use Purple Jrank?
 There exist bugs in the JDK serialization stream protocol that make it unparseable with zero knowledge of the classes.  Basically, if you don't have all the classes from the stream, you can't even parse it, let alone deserialize it.  The biggest culprit is **ObjectOutputStream**, which lets you omit the call to **defaultWriteObject()** if you have a **writeObject(ObjectOutputStream)** method.  If any class in the stream does this then the stream cannot be parsed without actually executing the equivalent **readObject(ObjectInputStream)** method from that class.
@@ -32,37 +32,37 @@ Purple Jrank is based on the **java.nio** framework, but will accept **java.io**
 Using Purple Jrank is just like using **ObjectInputStream** and **ObjectOutputStream**:
 
 To write an object:
-	WritableByteChannel ch = ...
-	ObjectOutputStream out = new PurpleJrankOutput(ch);
-	out.writeObject(someObject);
+    WritableByteChannel ch = ...
+    ObjectOutputStream out = new PurpleJrankOutput(ch);
+    out.writeObject(someObject);
 
 To read an object:
-	ReadableByteChannel ch = ...
-	ObjectInputStream in = new PurpleJrankInput(ch);
-	in.readObject();
+    ReadableByteChannel ch = ...
+    ObjectInputStream in = new PurpleJrankInput(ch);
+    in.readObject();
 
 ## Reading Streams with Missing Classes
 
 Purple Jrank has built-in support for reading streams that require classes not found on the classpath.  In this case, objects of these missing classes are replaced with nulls.
 
 To read a missing-classes stream:
-	ReadableByteChannel ch = ...
-	ObjectInputStream in = new NullsJrankInput(ch);
-	in.readObject();
+    ReadableByteChannel ch = ...
+    ObjectInputStream in = new NullsJrankInput(ch);
+    in.readObject();
 
 ## Supported Serialization Methods
 
 All the normal **Serializable** and **Externalizable** methods are supported.
 
 From **Serializable**:
-	writeObject(ObjectOutputStream)
-	readObject(ObjectInputStream)
-	readObjectNoData()
-	writeReplace()
-	readResolve()
+    writeObject(ObjectOutputStream)
+    readObject(ObjectInputStream)
+    readObjectNoData()
+    writeReplace()
+    readResolve()
 
 From **Externalizable**:
-	writeExternal(ObjectOutput)
-	readExternal(ObjectInput)
+    writeExternal(ObjectOutput)
+    **readExternal**(ObjectInput)
 
 However, non-public (e.g. **protected**) methods of **ObjectOutputStream** and **ObjectInputStream** are not supported.  The have been declared **final** and **@Deprecated**, and throw **UnsupportedOperationException** if invoked.  Purple Jrank provides its own protected methods for customizing the object serialization or deserialization process.  Additionally, **PutField.write(ObjectOutput)** is not supported, and also declared **final** and **@Deprecated**.
