@@ -6,12 +6,14 @@ Purple Jrank is a more robust way to serialize objects than the JDK's **ObjectOu
 Purple Jrank is built and deployed with Apache Maven.  Right now it isn't on Maven Central, so you'll have to add the development repository.
 
 The repository:
+
     <repository>
         <id>purplejrank</id>
         <url>http://repo.purplejrank.org/</url>
     </repository>
 
 The artifact itself:
+
     <dependency>
         <groupId>org.purplejrank</groupId>
         <artifactId>purplejrank</artifactId>
@@ -32,11 +34,13 @@ Purple Jrank is based on the **java.nio** framework, but will accept **java.io**
 Using Purple Jrank is just like using **ObjectInputStream** and **ObjectOutputStream**:
 
 To write an object:
+
     WritableByteChannel ch = ...
     ObjectOutputStream out = new PurpleJrankOutput(ch);
     out.writeObject(someObject);
 
 To read an object:
+
     ReadableByteChannel ch = ...
     ObjectInputStream in = new PurpleJrankInput(ch);
     in.readObject();
@@ -46,6 +50,7 @@ To read an object:
 Purple Jrank has built-in support for reading streams that require classes not found on the classpath.  In this case, objects of these missing classes are replaced with nulls.
 
 To read a missing-classes stream:
+
     ReadableByteChannel ch = ...
     ObjectInputStream in = new NullsJrankInput(ch);
     in.readObject();
@@ -55,6 +60,7 @@ To read a missing-classes stream:
 All the normal **Serializable** and **Externalizable** methods are supported.
 
 From **Serializable**:
+
     writeObject(ObjectOutputStream)
     readObject(ObjectInputStream)
     readObjectNoData()
@@ -62,6 +68,7 @@ From **Serializable**:
     readResolve()
 
 From **Externalizable**:
+
     writeExternal(ObjectOutput)
     **readExternal**(ObjectInput)
 
