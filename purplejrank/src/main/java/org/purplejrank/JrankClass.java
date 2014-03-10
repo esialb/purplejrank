@@ -42,6 +42,7 @@ public class JrankClass {
 			proxyInterfaceNames = new String[ifcs.length];
 			for(int i = 0; i < ifcs.length; i++)
 				proxyInterfaceNames[i] = ifcs[i].getName();
+			setFieldFields(cls, fieldCache);
 		} else if(cls.isArray()) {
 			name = className(cls);
 			serialVersion = ObjectStreamClass.lookupAny(cls).getSerialVersionUID();

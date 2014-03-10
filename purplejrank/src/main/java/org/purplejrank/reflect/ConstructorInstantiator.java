@@ -17,6 +17,5 @@ public class ConstructorInstantiator implements Instantiator {
 		} catch(Exception ex) {
 			throw new ClassNotFoundException(ex.toString());
 		}
-		
 	}
 }

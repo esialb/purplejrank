@@ -472,6 +472,9 @@ public class PurpleJrankInput extends ObjectInputStream implements ObjectInput {
 			
 			d.setProxy(true);
 			d.setProxyInterfaceNames(ifcs);
+			d.setFields(new Field[0]);
+			d.setFieldNames(new String[0]);
+			d.setFieldTypes(new String[0]);
 			
 			d.setType(resolveProxyClass(d.getProxyInterfaceNames()));
 			
