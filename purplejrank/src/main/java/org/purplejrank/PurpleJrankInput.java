@@ -37,13 +37,18 @@ public class PurpleJrankInput extends ObjectInputStream implements ObjectInput {
 	private ByteBuffer buf = ByteBuffer.allocate(JrankConstants.MAX_BLOCK_SIZE);
 	private int blockEnd = 0;
 	
-	private ClassLoader cl = PurpleJrankInput.class.getClassLoader();
+	private ClassLoader cl;
 	private List<Object> wired = new ArrayList<Object>();
 	private Deque<JrankContext> context = new ArrayDeque<JrankContext>(Arrays.asList(JrankContext.NO_CONTEXT));
 	private NavigableMap<Integer, List<ObjectInputValidation>> validation = new TreeMap<Integer, List<ObjectInputValidation>>();
 	
 	public PurpleJrankInput(ReadableByteChannel in) throws IOException {
+		this(in, PurpleJrankInput.class.getClassLoader());
+	}
+	
+	public PurpleJrankInput(ReadableByteChannel in, ClassLoader cl) throws IOException {
 		this.in = in;
+		this.cl = cl;
 		buf.limit(0);
 		ensureAvailable(8);
 		int magic = buf.getInt();
@@ -430,6 +435,8 @@ public class PurpleJrankInput extends ObjectInputStream implements ObjectInput {
 	}
 
 	private Method findReadResolve(Object obj) {
+		if(obj == null)
+			return null;
 		Class<?> cls = obj.getClass();
 		while(cls != null) {
 			try {

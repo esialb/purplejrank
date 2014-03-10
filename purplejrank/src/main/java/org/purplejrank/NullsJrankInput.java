@@ -9,6 +9,10 @@ public class NullsJrankInput extends PurpleJrankInput {
 		super(in);
 	}
 
+	public NullsJrankInput(ReadableByteChannel in, ClassLoader cl) throws IOException {
+		super(in, cl);
+	}
+
 	@Override
 	protected Class<?> resolveClass(String name) throws IOException, ClassNotFoundException {
 		try {
