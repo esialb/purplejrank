@@ -1,5 +1,5 @@
 # Purple Jrank: Relaxed Serialization
-Purple Jrank is a more robust way to serialize objects than the JDK's **ObjectOutputStream** and **ObjectInputStream**.  It aims to be fully feature-compatible with JDK serialization, but uses a different stream protocol that more clearly delineates data boundaries, allowing streams to be parsed with zero knowledge of the class implementations.  Purple Jrank takes advantage of this zero-knowledge parseability to recover and continue deserializing streams that, if written with the JDK's **ObjectOutputStream**, would be unreadable or ambiguous.
+Purple Jrank is a more robust way to serialize objects than the JDK's **ObjectOutputStream** and **ObjectInputStream**.  It aims to be fully feature-compatible with JDK serialization, but uses a different stream protocol that more clearly delineates data boundaries, allowing streams to be parsed with zero knowledge of the class implementations.  Purple Jrank takes advantage of this zero-knowledge parseability to recover and continue deserializing streams that, if written with the JDK's **ObjectOutputStream**, would be unreadable or ambiguous.  Streams written by PurpleJrank are unambiguous.
 
 Purple Jrank means reliable and flexible serialization even in the face of changing (or even missing) classes.
 
@@ -36,26 +36,44 @@ Purple Jrank properly writes headers and boundaries to fix this bug.  The output
 ### Stream Corruption Example
 The following class writes a corrupt stream, corrupt in that it cannot be parsed without knowledge of the implementation of **writeObject**, and that it is possible to read the stream totally incorrectly without any exceptions being thrown.
 
+	/**
+	 * Class that demonstrates the ambiguity in JDK object streams
+	 * @author robin
+	 *
+	 */
 	public static class A implements Serializable {
 		private static final long serialVersionUID = 0;
 
-		public int fail = 0x70707070;
+		/*
+		 * This magic value is the encoding of the string "Fail" followed by a null,
+		 * as it would be written by defaultWriteObject
+		 */
+		public long fail = 0x7400044661696c70L;
 
 		/*
-		 * A single field, an int, should be written to the stream
+		 * A single field, a long, should be written to the stream
 		 */
 		private void writeObject(ObjectOutputStream out) throws IOException {
 			out.defaultWriteObject(); // written as raw stream metadata, not contained in any block
 		}
 
 		/*
-		 * Because of ambiguity, the JDK allows the int to be interpreted as four nulls in a row
+		 * Because of ambiguity, the JDK allows the long to be interpreted as 
+		 * a string reference followed by a null reference
 		 */
 		private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
-			in.readObject(); // interprets the "fail" byte as a null object reference
-			in.readObject();
-			in.readObject();
-			in.readObject();
+			/*
+			 * The first call to readObject should throw a StreamCorruptedException.
+			 * JDK streams don't throw it.  PurpleJrank does.
+			 */
+			String fail = (String) in.readObject();
+			Object nil = in.readObject();
+			/*
+			 * Verify that we _did_ manage to deserialize a default-written long as a string and
+			 * a null
+			 */
+			if(!"Fail".equals(fail) || nil != null)
+				throw new StreamCorruptedException();
 		}
 	}
 
