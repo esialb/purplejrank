@@ -47,7 +47,9 @@ public class PurpleJrankInput extends ObjectInputStream implements ObjectInput {
 
 	protected ReadableByteChannel in;
 	protected ByteBuffer buf = ByteBuffer.allocateDirect(J_MAX_BLOCK_SIZE);
-	protected int blockEnd = 0;
+	protected ByteBuffer blockHeader = ByteBuffer.allocateDirect(6);
+	protected boolean blockMode = false;
+	protected int unbufferedBlock = 0;
 
 	protected ClassLoader cl;
 	protected FieldCache fieldCache = new FieldCache();
@@ -89,36 +91,66 @@ public class PurpleJrankInput extends ObjectInputStream implements ObjectInput {
 	protected byte peek() throws IOException {
 		return ensureOpen().ensureAvailable(1).get(buf.position());
 	}
-
+	
 	protected PurpleJrankInput setBlockMode(boolean blockMode) throws IOException {
 		ensureOpen();
-		if(blockEnd > 0 && blockMode)
+		if(this.blockMode && blockMode)
 			return this;
-		if(blockMode) {
+		if(blockMode) { // turn on block mode
 			ensureAvailable(1);
 			if(buf.get() != J_BLOCK_DATA)
 				throw new StreamCorruptedException("Not at block boundary");
-			ensureAvailable(blockEnd = readEscapedInt());
-			buf.limit(blockEnd);
-		} else if(blockEnd > 0) {
-			blockEnd = 0;
-			buf.position(0);
-			buf.limit(0);
+			int blockSize = readEscapedInt();
+			buf.clear().limit(Math.min(blockSize, buf.capacity()));
+			in.read(buf);
+			buf.flip();
+			unbufferedBlock = blockSize - buf.limit();
+		} else if(this.blockMode) { // turn off block mode
+			do {
+				buf.clear();
+				buf.limit(Math.min(unbufferedBlock, buf.remaining()));
+				in.read(buf);
+				unbufferedBlock -= buf.limit();
+			} while(unbufferedBlock > 0);
+			buf.clear().limit(0); // discard the block data
 		}
+		this.blockMode = blockMode;
 		return this;
 	}
 
 	protected ByteBuffer ensureAvailable(int available) throws IOException {
-		if(buf.remaining() < available) {
-			int r = buf.remaining();
-			buf.compact();
-			buf.position(r);
-			buf.limit(r + available);
-			r = in.read(buf);
-			if(r == -1)
-				throw new EOFException();
-			buf.position(0);
+		if(!blockMode) {
+			if(buf.remaining() < available) {
+				buf.compact();
+				buf.limit(available);
+				in.read(buf);
+				buf.position(0);
+			}
+		} else {
+			while(buf.remaining() < available) {
+				// first try to read unbuffered block data
+				if(unbufferedBlock > 0) {
+					buf.compact().limit(Math.min(unbufferedBlock, buf.remaining()));
+					in.read(buf);
+					buf.position(0);
+					unbufferedBlock -= buf.limit();
+					continue;
+				}
+				// then try to read the next block
+				blockHeader.clear();
+				in.read(blockHeader);
+				blockHeader.flip();
+				if(blockHeader.get() != J_BLOCK_DATA)
+					throw new StreamCorruptedException("Not at block boundary");
+				int blockSize = readEscapedInt(blockHeader);
+				buf.clear().limit(Math.min(blockSize, buf.capacity()));
+				buf.put(blockHeader);
+				in.read(buf);
+				buf.flip();
+				unbufferedBlock = blockSize - buf.limit();
+			}
 		}
+		
 		return buf;
 	}
 
@@ -134,6 +166,21 @@ public class PurpleJrankInput extends ObjectInputStream implements ObjectInput {
 		v <<= shift;
 		if(more) {
 			v |= readEscapedInt(shift + 7);
+		}
+		return v;
+	}
+
+	protected int readEscapedInt(ByteBuffer buf) throws IOException {
+		return readEscapedInt(buf, 0);
+	}
+
+	private int readEscapedInt(ByteBuffer buf, int shift) throws IOException {
+		int v = 0xff & buf.get();
+		boolean more = (v & 0x80) != 0;
+		v &= 0x7f;
+		v <<= shift;
+		if(more) {
+			v |= readEscapedInt(buf, shift + 7);
 		}
 		return v;
 	}
@@ -649,9 +696,9 @@ public class PurpleJrankInput extends ObjectInputStream implements ObjectInput {
 
 	@Override
 	public int available() throws IOException {
-		if(blockEnd == 0)
+		if(!blockMode)
 			return 0;
-		return blockEnd - buf.position();
+		return buf.remaining();
 	}
 
 	@Override

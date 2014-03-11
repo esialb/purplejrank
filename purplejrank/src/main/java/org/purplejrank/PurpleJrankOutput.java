@@ -37,7 +37,7 @@ public class PurpleJrankOutput extends ObjectOutputStream implements ObjectOutpu
 	protected WritableByteChannel out;
 	protected ByteBuffer buf = ByteBuffer.allocateDirect(J_MAX_BLOCK_SIZE);
 	protected boolean blockMode = false;
-	protected ByteBuffer blockHeader = ByteBuffer.allocateDirect(5);
+	protected ByteBuffer blockHeader = ByteBuffer.allocateDirect(6);
 	
 	protected FieldCache fieldCache = new FieldCache();
 	protected MethodCache methodCache = new MethodCache();
