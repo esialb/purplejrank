@@ -25,6 +25,8 @@ import org.purplejrank.io.StreamWritableByteChannel;
 import org.purplejrank.reflect.FieldCache;
 import org.purplejrank.reflect.MethodCache;
 
+import static org.purplejrank.JrankConstants.*;
+
 /**
  * Extension of {@link ObjectOutputStream} with a protocol based on {@link ObjectOutputStream}
  * but slightly more robust.
@@ -33,7 +35,7 @@ import org.purplejrank.reflect.MethodCache;
  */
 public class PurpleJrankOutput extends ObjectOutputStream implements ObjectOutput {
 	protected WritableByteChannel out;
-	protected ByteBuffer buf = ByteBuffer.allocateDirect(JrankConstants.MAX_BLOCK_SIZE);
+	protected ByteBuffer buf = ByteBuffer.allocateDirect(J_MAX_BLOCK_SIZE);
 	protected boolean blockMode = false;
 	protected ByteBuffer blockHeader = ByteBuffer.allocateDirect(5);
 	
@@ -50,8 +52,8 @@ public class PurpleJrankOutput extends ObjectOutputStream implements ObjectOutpu
 	
 	public PurpleJrankOutput(WritableByteChannel out) throws IOException {
 		this.out = out;
-		buf.putInt(JrankConstants.MAGIC);
-		buf.putInt(JrankConstants.VERSION);
+		buf.putInt(J_MAGIC);
+		buf.putInt(J_VERSION);
 		dump();
 	}
 	
@@ -180,7 +182,7 @@ public class PurpleJrankOutput extends ObjectOutputStream implements ObjectOutpu
 		ensureOpen().setBlockMode(false);
 		
 		if(obj == null) {
-			ensureCapacity(1).put(JrankConstants.NULL);
+			ensureCapacity(1).put(J_NULL);
 			return;
 		}
 		
@@ -188,7 +190,7 @@ public class PurpleJrankOutput extends ObjectOutputStream implements ObjectOutpu
 			throw new NotSerializableException(obj.getClass().getName());
 		
 		if(shared && wired.containsKey(obj)) {
-			ensureCapacity(6).put(JrankConstants.REFERENCE);
+			ensureCapacity(6).put(J_REFERENCE);
 			writeEscapedInt(wired.get(obj));
 			return;
 		}
@@ -205,7 +207,7 @@ public class PurpleJrankOutput extends ObjectOutputStream implements ObjectOutpu
 		}
 		
 		if(obj.getClass().isArray()) {
-			ensureCapacity(1).put(JrankConstants.ARRAY);
+			ensureCapacity(1).put(J_ARRAY);
 			JrankClass d = writeClassDesc(obj.getClass());
 			if(!wired.containsKey(obj))
 				wired.put(obj, nextHandle++);
@@ -231,20 +233,27 @@ public class PurpleJrankOutput extends ObjectOutputStream implements ObjectOutpu
 		if(obj instanceof String) {
 			if(!wired.containsKey(obj))
 				wired.put(obj, nextHandle++);
-			ensureCapacity(1).put(JrankConstants.STRING);
+			ensureCapacity(1).put(J_STRING);
 			writeUTF((String) obj, false);
 			return;
 		}
 		
 		if(obj instanceof Enum<?>) {
-			ensureCapacity(1).put(JrankConstants.ENUM);
+			ensureCapacity(1).put(J_ENUM);
 			writeClassDesc(obj.getClass());
 			writeObject0(((Enum<?>) obj).name(), true);
 			wired.put(obj, nextHandle++);
 			return;
 		}
 		
-		ensureCapacity(1).put(JrankConstants.OBJECT);
+		if(obj instanceof Class<?>) {
+			ensureCapacity(1).put(J_CLASS);
+			writeClassDesc((Class<?>) obj);
+			wired.put(obj, nextHandle++);
+			return;
+		}
+		
+		ensureCapacity(1).put(J_OBJECT);
 		JrankClass d = writeClassDesc(obj.getClass());
 		if(!wired.containsKey(obj)) {
 			wired.put(obj, nextHandle);
@@ -252,15 +261,16 @@ public class PurpleJrankOutput extends ObjectOutputStream implements ObjectOutpu
 			nextHandle++;
 		}
 		
-		if(d.getFlags() == JrankConstants.SC_WRITE_EXTERNAL) {
+		if((d.getFlags() & J_SC_WRITE_EXTERNAL) == J_SC_WRITE_EXTERNAL) {
 			context.offerLast(new JrankContext(d, obj));
 			((Externalizable) obj).writeExternal(this);
 			context.pollLast();
 		} else {
-			JrankClass t = d;
-			while(t != null) {
+			for(JrankClass t = d; t != null; t = t.getParent()) {
+				if((t.getFlags() & J_SC_SERIALIZABLE) == 0)
+					continue;
 				context.offerLast(new JrankContext(t, obj));
-				if(t.getFlags() == JrankConstants.SC_WRITE_OBJECT) {
+				if((t.getFlags() & J_SC_WRITE_OBJECT) == J_SC_WRITE_OBJECT) {
 					try {
 						Method m = methodCache.get(t.getType(), "writeObject", ObjectOutputStream.class);
 						m.invoke(obj, this);
@@ -270,25 +280,24 @@ public class PurpleJrankOutput extends ObjectOutputStream implements ObjectOutpu
 				} else {
 					defaultWriteObject();
 				}
-				setBlockMode(false).ensureCapacity(1).put(JrankConstants.WALL);
+				setBlockMode(false).ensureCapacity(1).put(J_WALL);
 				context.pollLast();
-				t = t.getParent();
 			}
 		}
-		setBlockMode(false).ensureCapacity(1).put(JrankConstants.WALL);
+		setBlockMode(false).ensureCapacity(1).put(J_WALL);
 		
 	}
 	
 	protected JrankClass writeClassDesc(Class<?> cls) throws IOException {
 		setBlockMode(false);
 		
-		if(cls == null || !Serializable.class.isAssignableFrom(cls)) {
-			ensureCapacity(1).put(JrankConstants.NULL);
+		if(cls == null) {
+			ensureCapacity(1).put(J_NULL);
 			return null;
 		}
 			
 		if(classdesc.containsKey(cls)) {
-			ensureCapacity(6).put(JrankConstants.REFERENCE);
+			ensureCapacity(6).put(J_REFERENCE);
 			writeEscapedInt(wired.get(cls));
 			return classdesc.get(cls);
 		}
@@ -298,12 +307,12 @@ public class PurpleJrankOutput extends ObjectOutputStream implements ObjectOutpu
 		classdesc.put(cls, d = new JrankClass(cls, fieldCache));
 		
 		if(d.isProxy()) {
-			ensureCapacity(1).put(JrankConstants.PROXYCLASSDESC);
+			ensureCapacity(1).put(J_PROXYCLASSDESC);
 			writeEscapedInt(d.getProxyInterfaceNames().length);
 			for(String ifc : d.getProxyInterfaceNames())
 				writeUTF(ifc, false);
 		} else {
-			ensureCapacity(1).put(JrankConstants.CLASSDESC);
+			ensureCapacity(1).put(J_CLASSDESC);
 			writeUTF(d.getName(), false);
 			writeEscapedLong(ObjectStreamClass.lookupAny(cls).getSerialVersionUID());
 			ensureCapacity(3).put(d.getFlags()).putShort((short) d.getFieldNames().length);
@@ -358,7 +367,7 @@ public class PurpleJrankOutput extends ObjectOutputStream implements ObjectOutpu
 	protected void dump() throws IOException {
 		ensureOpen();
 		if(this.blockMode) {
-			blockHeader.put(JrankConstants.BLOCK_DATA);
+			blockHeader.put(J_BLOCK_DATA);
 			writeEscapedInt(blockHeader, buf.position());
 			out.write((ByteBuffer) blockHeader.flip());
 			blockHeader.clear();
@@ -415,7 +424,7 @@ public class PurpleJrankOutput extends ObjectOutputStream implements ObjectOutpu
 		JrankContext ctx = context.peekLast();
 		if(ctx == JrankContext.NO_CONTEXT)
 			throw new NotActiveException();
-		setBlockMode(false).ensureCapacity(1).put(JrankConstants.FIELDS);
+		setBlockMode(false).ensureCapacity(1).put(J_FIELDS);
 		for(int i = 0; i < ctx.getType().getFieldNames().length; i++) {
 			String name = ctx.getType().getFieldNames()[i];
 			Class<?> fc = ctx.getType().getFieldClasses()[i];
@@ -436,12 +445,12 @@ public class PurpleJrankOutput extends ObjectOutputStream implements ObjectOutpu
 				throw new JrankStreamException(e);
 			}
 		}
-		setBlockMode(false).ensureCapacity(1).put(JrankConstants.WALL);
+		setBlockMode(false).ensureCapacity(1).put(J_WALL);
 	}
 
 	@Override
 	public void reset() throws IOException {
-		setBlockMode(false).ensureCapacity(1).put(JrankConstants.RESET);
+		setBlockMode(false).ensureCapacity(1).put(J_RESET);
 		wired.clear();
 		classdesc.clear();
 	}

@@ -6,27 +6,29 @@ package org.purplejrank;
  *
  */
 public class JrankConstants {
-	public static final int MAX_BLOCK_SIZE = 1024*1024;
-	public static final int MAGIC = 0xdeadbeef;
-	public static final int VERSION = 1;
+	public static final int J_MAX_BLOCK_SIZE = 1024*1024;
+	public static final int J_MAGIC = 0xdeadbeef;
+	public static final int J_VERSION = 1;
 	
-	public static final byte NULL = 0;
-	public static final byte REFERENCE = 1;
-	public static final byte CLASSDESC = 2;
-	public static final byte OBJECT = 3;
-	public static final byte STRING = 4;
-	public static final byte ARRAY = 5;
-	public static final byte CLASS = 6;
-	public static final byte BLOCK_DATA = 7;
-	public static final byte WALL = 8;
-	public static final byte RESET = 9;
-	public static final byte EXCEPTION = 10;
-	public static final byte PROXYCLASSDESC = 11;
-	public static final byte ENUM = 11;
-	public static final byte FIELDS = 12;
+	public static final byte J_NULL = 0;
+	public static final byte J_REFERENCE = 1;
+	public static final byte J_CLASSDESC = 2;
+	public static final byte J_OBJECT = 3;
+	public static final byte J_STRING = 4;
+	public static final byte J_ARRAY = 5;
+	public static final byte J_CLASS = 6;
+	public static final byte J_BLOCK_DATA = 7;
+	public static final byte J_WALL = 8;
+	public static final byte J_RESET = 9;
+	public static final byte J_EXCEPTION = 10;
+	public static final byte J_PROXYCLASSDESC = 11;
+	public static final byte J_ENUM = 11;
+	public static final byte J_FIELDS = 12;
 	
-	public static final byte SC_WRITE_FIELDS = 0;
-	public static final byte SC_WRITE_OBJECT = 1;
-	public static final byte SC_WRITE_EXTERNAL = 2;
-	public static final byte SC_WRITE_ENUM = 3;
+	public static final byte J_SC_WRITE_FIELDS = 0x01;
+	public static final byte J_SC_WRITE_OBJECT = 0x02;
+	public static final byte J_SC_WRITE_EXTERNAL = 0x04;
+	public static final byte J_SC_WRITE_ENUM = 0x08;
+	public static final byte J_SC_SERIALIZABLE = 0x10;
+			
 }

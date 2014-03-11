@@ -29,12 +29,14 @@ public class JrankClass {
 	protected JrankClass parent;
 	
 	protected Class<?> type;
+	protected FieldCache fieldCache;
 	protected Field[] fields;
 	
 	JrankClass() {}
 	
 	public JrankClass(Class<?> cls, FieldCache fieldCache) {
 		this.type = cls;
+		this.fieldCache = fieldCache;
 		
 		if(cls.isPrimitive()) {
 			name = className(cls);
@@ -44,31 +46,29 @@ public class JrankClass {
 			proxyInterfaceNames = new String[ifcs.length];
 			for(int i = 0; i < ifcs.length; i++)
 				proxyInterfaceNames[i] = ifcs[i].getName();
-			setFieldFields(cls, fieldCache);
 		} else if(cls.isArray()) {
 			name = className(cls);
 			serialVersion = ObjectStreamClass.lookupAny(cls).getSerialVersionUID();
-			setFieldFields(cls, fieldCache);
 		} else {
 			name = "L" + cls.getName() + ";";
 			serialVersion = ObjectStreamClass.lookupAny(cls).getSerialVersionUID();
-			setFieldFields(cls, fieldCache);
 		}
+		setFieldFields();
 	}
 	
-	protected void setFieldFields(Class<?> cls, FieldCache fieldCache) {
-		flags = 0;
+	protected void setFieldFields() {
+		Class<?> cls = type;
 		if(Enum.class.isAssignableFrom(cls))
-			flags = JrankConstants.SC_WRITE_ENUM;
+			flags = JrankConstants.J_SC_WRITE_ENUM;
 		else if(Externalizable.class.isAssignableFrom(cls))
-			flags = JrankConstants.SC_WRITE_EXTERNAL;
-		else {
+			flags = JrankConstants.J_SC_WRITE_EXTERNAL;
+		else if(Serializable.class.isAssignableFrom(cls)) {
+			flags = JrankConstants.J_SC_SERIALIZABLE;
 			try {
 				cls.getDeclaredMethod("writeObject", ObjectOutputStream.class);
-				flags = JrankConstants.SC_WRITE_OBJECT;
+				flags |= JrankConstants.J_SC_WRITE_OBJECT;
 			} catch(NoSuchMethodException e) {
-				if(Serializable.class.isAssignableFrom(cls))
-					flags = JrankConstants.SC_WRITE_FIELDS;
+				flags |= JrankConstants.J_SC_WRITE_FIELDS;
 			}
 		}
 		fields = fieldCache.get(cls);

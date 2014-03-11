@@ -67,13 +67,13 @@ public class CollectionsJrankInput extends PurpleJrankInput {
 	@Override
 	protected void skipOptionalData() throws IOException, ClassNotFoundException {
 		setBlockMode(false);
-		for(byte b = peek(); b != JrankConstants.WALL; b = peek()) {
+		for(byte b = peek(); b != JrankConstants.J_WALL; b = peek()) {
 			switch(b) {
-			case JrankConstants.BLOCK_DATA:
+			case JrankConstants.J_BLOCK_DATA:
 				setBlockMode(true);
 				setBlockMode(false);
 				break;
-			case JrankConstants.FIELDS:
+			case JrankConstants.J_FIELDS:
 				defaultReadObject();
 				break;
 			default:

@@ -10,6 +10,7 @@ import java.io.ObjectInput;
 import java.io.ObjectInputStream;
 import java.io.ObjectInputValidation;
 import java.io.ObjectStreamClass;
+import java.io.Serializable;
 import java.io.StreamCorruptedException;
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
@@ -34,6 +35,8 @@ import org.purplejrank.io.StreamReadableByteChannel;
 import org.purplejrank.reflect.FieldCache;
 import org.purplejrank.reflect.MethodCache;
 
+import static org.purplejrank.JrankConstants.*;
+
 /**
  * Extension of {@link ObjectInputStream} with a protocol based on {@link ObjectInputStream},
  * but slightly more robust.
@@ -43,7 +46,7 @@ import org.purplejrank.reflect.MethodCache;
 public class PurpleJrankInput extends ObjectInputStream implements ObjectInput {
 
 	protected ReadableByteChannel in;
-	protected ByteBuffer buf = ByteBuffer.allocateDirect(JrankConstants.MAX_BLOCK_SIZE);
+	protected ByteBuffer buf = ByteBuffer.allocateDirect(J_MAX_BLOCK_SIZE);
 	protected int blockEnd = 0;
 
 	protected ClassLoader cl;
@@ -72,9 +75,9 @@ public class PurpleJrankInput extends ObjectInputStream implements ObjectInput {
 		ensureAvailable(8);
 		int magic = buf.getInt();
 		int version = buf.getInt();
-		if(magic != JrankConstants.MAGIC)
+		if(magic != J_MAGIC)
 			throw new JrankStreamException("invalid magic");
-		if(version != JrankConstants.VERSION)
+		if(version != J_VERSION)
 			throw new JrankStreamException("invalid version");
 	}
 
@@ -93,7 +96,7 @@ public class PurpleJrankInput extends ObjectInputStream implements ObjectInput {
 			return this;
 		if(blockMode) {
 			ensureAvailable(1);
-			if(buf.get() != JrankConstants.BLOCK_DATA)
+			if(buf.get() != J_BLOCK_DATA)
 				throw new StreamCorruptedException("Not at block boundary");
 			ensureAvailable(blockEnd = readEscapedInt());
 			buf.limit(blockEnd);
@@ -264,17 +267,17 @@ public class PurpleJrankInput extends ObjectInputStream implements ObjectInput {
 		int handle = -1;
 
 		switch(ensureAvailable(1).get()) {
-		case JrankConstants.NULL:
+		case J_NULL:
 			return null;
 
-		case JrankConstants.REFERENCE:
+		case J_REFERENCE:
 			handle = readEscapedInt();
 			if(shared)
 				return wired.get(handle);
 			obj = clone(wired.get(handle));
 			break;
 
-		case JrankConstants.ARRAY:
+		case J_ARRAY:
 			JrankClass d = readClassDesc();
 			int size = setBlockMode(false).readEscapedInt();
 			Class<?> cmp = null;
@@ -303,61 +306,69 @@ public class PurpleJrankInput extends ObjectInputStream implements ObjectInput {
 			context.pollLast();
 			break;
 
-		case JrankConstants.STRING:
+		case J_STRING:
 			obj = readUTF(false);
 			wired.add(obj);
 			break;
 
-		case JrankConstants.ENUM:
+		case J_ENUM:
 			d = readClassDesc();
 			String name = (String) readObject0(true);
 			obj = Enum.valueOf(d.getType().asSubclass(Enum.class), name);
 			wired.add(obj);
 			break;
 
-		case JrankConstants.OBJECT:
+		case J_CLASS:
+			d = readClassDesc();
+			obj = resolveClass(d);
+			wired.add(obj);
+			break;
+			
+		case J_OBJECT:
 			d = readClassDesc();
 			obj = newOrdinaryObject(d);
 			handle = wired.size();
 			wired.add(obj);
 
-			if(d.getFlags() == JrankConstants.SC_WRITE_EXTERNAL) {
+			if((d.getFlags() & J_SC_WRITE_EXTERNAL) == J_SC_WRITE_EXTERNAL) {
 				context.offerLast(new JrankContext(d, obj));
 				((Externalizable) obj).readExternal(this);
 				context.pollLast();
 			} else {
 				Set<Class<?>> restoredClasses = new HashSet<Class<?>>();
 				for(JrankClass t = d; t != null; t = t.getParent()) {
+					if((t.getFlags() & J_SC_SERIALIZABLE) == 0)
+						continue;
 					context.offerLast(new JrankContext(t, obj));
 					Method m = null;
 					try {
-						if(t.getType() != null && !Enum.class.isAssignableFrom(t.getType()))
+						if(
+								t.getType() != null 
+								&& (t.getFlags() & J_SC_WRITE_OBJECT) == J_SC_WRITE_OBJECT)
 							m = methodCache.get(t.getType(), "readObject", ObjectInputStream.class);
 					} catch(NoSuchMethodException e) {}
-					if(obj == null)
-						skipOptionalData();
-					else if(t.getType() == null || !t.getType().isInstance(obj))
-						skipOptionalData();
-					else if(m != null) {
+					if(obj == null || t.getType() == null || !t.getType().isInstance(obj))
+						;
+					else if((t.getFlags() & J_SC_WRITE_OBJECT) == J_SC_WRITE_OBJECT) {
 						restoredClasses.add(t.getType());
 						try {
-							m.invoke(obj, this);
+							if(m != null)
+								m.invoke(obj, this);
 						} catch(Exception ex) {
 							throw new JrankStreamException(ex);
 						}
-						skipOptionalData();
 					} else {
 						restoredClasses.add(t.getType());
 						defaultReadObject();
-						skipOptionalData();
 					}
+					skipOptionalData();
 					setBlockMode(false).ensureAvailable(1);
-					if(buf.get() != JrankConstants.WALL)
+					if(buf.get() != J_WALL)
 						throw new StreamCorruptedException();
 					context.pollLast();
 				}
 				Class<?> unrestored = obj != null ? obj.getClass() : null;
-				while(unrestored != null) {
+				while(unrestored != null && Serializable.class.isAssignableFrom(unrestored)) {
 					if(!restoredClasses.contains(unrestored)) {
 						try {
 							Method m = methodCache.get(unrestored, "readObjectNoData");
@@ -372,7 +383,7 @@ public class PurpleJrankInput extends ObjectInputStream implements ObjectInput {
 			}
 			
 			setBlockMode(false).ensureAvailable(1);
-			if(buf.get() != JrankConstants.WALL)
+			if(buf.get() != J_WALL)
 				throw new StreamCorruptedException();
 
 			Method m = findReadResolve(obj);
@@ -411,12 +422,12 @@ public class PurpleJrankInput extends ObjectInputStream implements ObjectInput {
 
 	protected void skipOptionalData() throws IOException, ClassNotFoundException {
 		setBlockMode(false);
-		for(byte b = peek(); b != JrankConstants.WALL; b = peek()) {
+		for(byte b = peek(); b != J_WALL; b = peek()) {
 			switch(b) {
-			case JrankConstants.BLOCK_DATA:
+			case J_BLOCK_DATA:
 				setBlockMode(true).setBlockMode(false);
 				break;
-			case JrankConstants.FIELDS:
+			case J_FIELDS:
 				readFields();
 				break;
 			default:
@@ -454,14 +465,14 @@ public class PurpleJrankInput extends ObjectInputStream implements ObjectInput {
 		JrankClass d;
 
 		switch(buf.get()) {
-		case JrankConstants.NULL:
+		case J_NULL:
 			return null;
 
-		case JrankConstants.REFERENCE:
+		case J_REFERENCE:
 			int handle = readEscapedInt();
 			return (JrankClass) wired.get(handle);
 
-		case JrankConstants.PROXYCLASSDESC:
+		case J_PROXYCLASSDESC:
 			d = new JrankClass();
 			wired.add(d);
 
@@ -482,7 +493,7 @@ public class PurpleJrankInput extends ObjectInputStream implements ObjectInput {
 
 			return d;
 
-		case JrankConstants.CLASSDESC:
+		case J_CLASSDESC:
 			String name = readUTF(false);
 			long serialVersion = readEscapedLong();
 			byte flags = ensureAvailable(1).get();
@@ -679,7 +690,7 @@ public class PurpleJrankInput extends ObjectInputStream implements ObjectInput {
 		if(ctx == JrankContext.NO_CONTEXT)
 			throw new NotActiveException();
 		byte b = setBlockMode(false).ensureAvailable(1).get();
-		if(b != JrankConstants.FIELDS)
+		if(b != J_FIELDS)
 			throw new StreamCorruptedException();
 		JrankClass desc = ctx.getType();
 		JrankGetFields fields = new JrankGetFields();
@@ -700,7 +711,7 @@ public class PurpleJrankInput extends ObjectInputStream implements ObjectInput {
 		}
 		setBlockMode(false).ensureAvailable(1);
 		byte wall = buf.get();
-		if(wall != JrankConstants.WALL)
+		if(wall != J_WALL)
 			throw new StreamCorruptedException();
 		return fields;
 	}

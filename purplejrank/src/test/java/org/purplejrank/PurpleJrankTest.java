@@ -6,6 +6,7 @@ import java.util.Arrays;
 import java.util.BitSet;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.Properties;
 import java.util.Vector;
@@ -32,7 +33,9 @@ public class PurpleJrankTest implements Serializable {
 				new Properties(),
 				new Vector<Object>(),
 				new Date(),
-				new BitSet()
+				new BitSet(),
+				GregorianCalendar.class,
+				int.class
 				);
 		List<Object[]> ret = new ArrayList<Object[]>(objs.size());
 		for(int i = 0; i < objs.size(); i++)
