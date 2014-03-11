@@ -52,7 +52,7 @@ public class PurpleJrankOutput extends ObjectOutputStream implements ObjectOutpu
 		this.out = out;
 		buf.putInt(JrankConstants.MAGIC);
 		buf.putInt(JrankConstants.VERSION);
-		flush();
+		dump();
 	}
 	
 	protected PurpleJrankOutput ensureOpen() throws IOException {
@@ -63,14 +63,14 @@ public class PurpleJrankOutput extends ObjectOutputStream implements ObjectOutpu
 	
 	protected PurpleJrankOutput setBlockMode(boolean blockMode) throws IOException {
 		if(blockMode != this.blockMode)
-			flush();
+			dump();
 		this.blockMode = blockMode;
 		return this;
 	} 
 	
 	protected ByteBuffer ensureCapacity(int capacity) throws IOException {
 		if(buf.remaining() < capacity)
-			flush();
+			dump();
 		return buf;
 	}
 	
@@ -355,8 +355,7 @@ public class PurpleJrankOutput extends ObjectOutputStream implements ObjectOutpu
 		write(Arrays.copyOfRange(b, off, off + len));
 	}
 
-	@Override
-	public void flush() throws IOException {
+	protected void dump() throws IOException {
 		ensureOpen();
 		if(this.blockMode) {
 			blockHeader.put(JrankConstants.BLOCK_DATA);
@@ -366,6 +365,11 @@ public class PurpleJrankOutput extends ObjectOutputStream implements ObjectOutpu
 		}
 		out.write((ByteBuffer) buf.flip());
 		buf.clear();
+	}
+	
+	@Override
+	public void flush() throws IOException {
+		dump();
 		if(out instanceof Flushable)
 			((Flushable) out).flush();
 	}
