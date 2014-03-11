@@ -3,11 +3,33 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>org.purplejrank</groupId>
 	<artifactId>purplejrank-parent</artifactId>
-	<version>0.1-SNAPSHOT</version>
+	<version>1.0</version>
 	<packaging>pom</packaging>
 	<modules>
 		<module>../purplejrank</module>
 	</modules>
+
+	<parent>
+		<groupId>org.sonatype.oss</groupId>
+		<artifactId>oss-parent</artifactId>
+		<version>7</version>
+	</parent>
+
+	<url>http://www.purplejrank.org/</url>
+	<description>relaxed jdk serialization</description>
+	<scm>
+		<url>git@github.com:esialb/purplejrank.git</url>
+		<connection>scm:git:git@github.com:esialb/purplejrank.git</connection>
+		<developerConnection>scm:git:git@github.com:esialb/purplejrank.git</developerConnection>
+	</scm>
+	<licenses>
+		<license>
+			<name>New BSD License</name>
+			<url>http://www.purplejrank.org/license.txt</url>
+		</license>
+	</licenses>
+
+
 
 	<build>
 		<plugins>
@@ -46,6 +68,20 @@
 					</execution>
 				</executions>
 			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-javadoc-plugin</artifactId>
+				<version>2.9.1</version>
+				<executions>
+					<execution>
+						<id>javadoc-jar</id>
+						<phase>package</phase>
+						<goals>
+							<goal>jar</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
 		</plugins>
 
 		<pluginManagement>
@@ -71,6 +107,35 @@
 			</plugins>
 		</pluginManagement>
 	</build>
+
+	<profiles>
+		<profile>
+			<id>sign-artifacts</id>
+			<activation>
+				<property>
+					<name>performSign</name>
+					<value>true</value>
+				</property>
+			</activation>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-gpg-plugin</artifactId>
+						<executions>
+							<execution>
+								<id>sign-artifacts</id>
+								<phase>verify</phase>
+								<goals>
+									<goal>sign</goal>
+								</goals>
+							</execution>
+						</executions>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+	</profiles>
 
 
 </project>
