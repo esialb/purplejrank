@@ -369,7 +369,7 @@ public class PurpleJrankOutput extends ObjectOutputStream implements ObjectOutpu
 
 	protected void dump() throws IOException {
 		ensureOpen();
-		if(this.blockMode) {
+		if(this.blockMode && buf.position() > 0) {
 			blockHeader.clear();
 			blockHeader.put(J_BLOCK_DATA);
 			writeEscapedInt(blockHeader, buf.position());
