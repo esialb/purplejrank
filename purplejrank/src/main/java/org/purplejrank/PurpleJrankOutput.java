@@ -339,20 +339,20 @@ public class PurpleJrankOutput extends ObjectOutputStream implements ObjectOutpu
 
 	@Override
 	public void write(byte[] b) throws IOException {
-		ensureOpen().setBlockMode(true);
-		int pos = 0;
-		while(pos < b.length) {
-			int r = Math.min(buf.remaining(), b.length - pos);
-			buf.put(b, pos, r);
-			pos += r;
-			if(pos < b.length)
-				dump();
-		}
+		write(b, 0, b.length);
 	}
 
 	@Override
 	public void write(byte[] b, int off, int len) throws IOException {
-		write(Arrays.copyOfRange(b, off, off + len));
+		ensureOpen().setBlockMode(true);
+		int pos = off;
+		while(pos < off + len) {
+			int r = Math.min(buf.remaining(), off + len - pos);
+			buf.put(b, pos, r);
+			pos += r;
+			if(pos < off + len)
+				dump();
+		}
 	}
 
 	protected void dump() throws IOException {
