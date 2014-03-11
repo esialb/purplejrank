@@ -270,7 +270,7 @@ public class PurpleJrankOutput extends ObjectOutputStream implements ObjectOutpu
 					continue;
 				context.offerLast(new JrankContext(t, obj));
 				if((t.getFlags() & J_SC_WRITE_OBJECT) == J_SC_WRITE_OBJECT) {
-					Method m = methodCache.get(t.getType(), "writeObject", ObjectOutputStream.class);
+					Method m = methodCache.declared(t.getType(), "writeObject", ObjectOutputStream.class);
 					try {
 						m.invoke(obj, this);
 					} catch(Exception e) {

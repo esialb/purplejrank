@@ -390,7 +390,7 @@ public class PurpleJrankInput extends ObjectInputStream implements ObjectInput {
 					if(
 							t.getType() != null 
 							&& (t.getFlags() & J_SC_WRITE_OBJECT) == J_SC_WRITE_OBJECT)
-						m = methodCache.get(t.getType(), "readObject", ObjectInputStream.class);
+						m = methodCache.declared(t.getType(), "readObject", ObjectInputStream.class);
 					if(obj == null || t.getType() == null || !t.getType().isInstance(obj))
 						;
 					else if((t.getFlags() & J_SC_WRITE_OBJECT) == J_SC_WRITE_OBJECT) {
@@ -416,7 +416,7 @@ public class PurpleJrankInput extends ObjectInputStream implements ObjectInput {
 				Class<?> unrestored = obj != null ? obj.getClass() : null;
 				while(unrestored != null && Serializable.class.isAssignableFrom(unrestored)) {
 					if(!restoredClasses.contains(unrestored)) {
-						Method m = methodCache.get(unrestored, "readObjectNoData");
+						Method m = methodCache.declared(unrestored, "readObjectNoData");
 						try {
 							if(m != null)
 								m.invoke(obj);

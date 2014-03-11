@@ -15,7 +15,7 @@ public class MethodCache {
 	private Map<String, Method> declared = new HashMap<String, Method>();
 	private Map<String, Method> found = new HashMap<String, Method>();
 	
-	public Method get(Class<?> cls, String name, Class<?>... parameterTypes) {
+	public Method declared(Class<?> cls, String name, Class<?>... parameterTypes) {
 		if(cls == null)
 			return null;
 		String key = cls.getName() + ":" + name + Arrays.toString(parameterTypes);
@@ -37,7 +37,7 @@ public class MethodCache {
 		String key = cls.getName() + ":" + name + Arrays.toString(parameterTypes);
 		if(found.containsKey(key))
 			return found.get(key);
-		Method m = get(cls, name, parameterTypes);
+		Method m = declared(cls, name, parameterTypes);
 		if(m == null)
 			m = find(cls.getSuperclass(), name, parameterTypes);
 		found.put(key, m);
