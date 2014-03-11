@@ -9,6 +9,28 @@
 		<module>../purplejrank</module>
 	</modules>
 
+	<parent>
+		<groupId>org.sonatype.oss</groupId>
+		<artifactId>oss-parent</artifactId>
+		<version>7</version>
+	</parent>
+
+	<url>http://www.purplejrank.org/</url>
+	<description>relaxed jdk serialization</description>
+	<scm>
+		<url>git@github.com:esialb/purplejrank.git</url>
+		<connection>scm:git:git@github.com:esialb/purplejrank.git</connection>
+		<developerConnection>scm:git:git@github.com:esialb/purplejrank.git</developerConnection>
+	</scm>
+	<licenses>
+		<license>
+			<name>New BSD License</name>
+			<url>http://www.purplejrank.org/license.txt</url>
+		</license>
+	</licenses>
+
+
+
 	<build>
 		<plugins>
 			<plugin>
@@ -71,6 +93,35 @@
 			</plugins>
 		</pluginManagement>
 	</build>
+
+	<profiles>
+		<profile>
+			<id>sign-artifacts</id>
+			<activation>
+				<property>
+					<name>performSign</name>
+					<value>true</value>
+				</property>
+			</activation>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-gpg-plugin</artifactId>
+						<executions>
+							<execution>
+								<id>sign-artifacts</id>
+								<phase>verify</phase>
+								<goals>
+									<goal>sign</goal>
+								</goals>
+							</execution>
+						</executions>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+	</profiles>
 
 
 </project>
