@@ -346,7 +346,7 @@ public class PurpleJrankOutput extends ObjectOutputStream implements ObjectOutpu
 			buf.put(b, pos, r);
 			pos += r;
 			if(pos < b.length)
-				flush();
+				dump();
 		}
 	}
 
