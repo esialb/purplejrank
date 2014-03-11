@@ -353,6 +353,8 @@ public class PurpleJrankInput extends ObjectInputStream implements ObjectInput {
 						try {
 							if(m != null)
 								m.invoke(obj, this);
+							else
+								defaultReadObject();
 						} catch(Exception ex) {
 							throw new JrankStreamException(ex);
 						}
