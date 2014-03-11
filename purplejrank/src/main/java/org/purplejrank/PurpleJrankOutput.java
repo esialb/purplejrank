@@ -334,13 +334,7 @@ public class PurpleJrankOutput extends ObjectOutputStream implements ObjectOutpu
 	
 	protected Method findWriteReplace(Object obj) {
 		Class<?> cls = obj.getClass();
-		while(cls != null) {
-			Method m = methodCache.get(cls, "writeReplace");
-			if(m != null)
-				return m;
-			cls = cls.getSuperclass();
-		}
-		return null;
+		return methodCache.find(cls, "writeReplace");
 	}
 	
 	@Override

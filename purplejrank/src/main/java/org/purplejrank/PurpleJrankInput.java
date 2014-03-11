@@ -594,13 +594,7 @@ public class PurpleJrankInput extends ObjectInputStream implements ObjectInput {
 		if(obj == null)
 			return null;
 		Class<?> cls = obj.getClass();
-		while(cls != null) {
-			Method m = methodCache.get(cls, "readResolve");
-			if(m != null)
-				return m;
-			cls = cls.getSuperclass();
-		}
-		return null;
+		return methodCache.find(cls, "readResolve");
 	}
 
 	protected Class<?> resolveClass(JrankClass desc) throws IOException, ClassNotFoundException {
