@@ -379,7 +379,8 @@ public class PurpleJrankInput extends ObjectInputStream implements ObjectInput {
 
 			if((d.getFlags() & J_SC_WRITE_EXTERNAL) == J_SC_WRITE_EXTERNAL) {
 				context.offerLast(new JrankContext(d, obj));
-				((Externalizable) obj).readExternal(this);
+				if(obj != null)
+					((Externalizable) obj).readExternal(this);
 				context.pollLast();
 			} else {
 				Set<Class<?>> restoredClasses = new HashSet<Class<?>>();
