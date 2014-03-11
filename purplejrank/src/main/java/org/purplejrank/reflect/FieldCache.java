@@ -11,38 +11,38 @@ import java.util.Map;
  */
 public class FieldCache {
 
-	private Map<Class<?>, Map<String, Field>> cache = new HashMap<Class<?>, Map<String,Field>>();
+	private Map<String, Field> declared = new HashMap<String, Field>();
+	private Map<String, Field[]> perClass = new HashMap<String, Field[]>();
 	
-	private void put(Field f) {
-		if(!cache.containsKey(f.getDeclaringClass()))
-			cache.put(f.getDeclaringClass(), new HashMap<String, Field>());
-		cache.get(f.getDeclaringClass()).put(f.getName(), f);
-	}
-	
-	public Field get(Class<?> cls, String field) throws NoSuchFieldException {
-		if(cache.containsKey(cls) && cache.get(cls).containsKey(field))
-			return cache.get(cls).get(field);
-		if(!cache.containsKey(cls))
-			cache.put(cls, new HashMap<String, Field>());
-		Field[] fields = cls.getDeclaredFields();
-		Field.setAccessible(fields, true);
-		for(Field f : fields)
-			put(f);
-		Field f = cache.get(cls).get(field);
-		if(f == null)
-			throw new NoSuchFieldException();
+	public Field declared(Class<?> cls, String name) {
+		if(cls == null)
+			return null;
+		String key = cls.getName() + ":" + name;
+		if(declared.containsKey(key))
+			return declared.get(key);
+		Field f = null;
+		try {
+			f = cls.getDeclaredField(name);
+			f.setAccessible(true);
+		} catch(NoSuchFieldException e) {
+		}
+		declared.put(key, f);
 		return f;
 	}
-	
-	public Field[] get(Class<?> cls) {
-		if(cache.containsKey(cls))
-			return cache.get(cls).values().toArray(new Field[0]);
-		cache.put(cls, new HashMap<String, Field>());
-		Field[] fields = cls.getDeclaredFields();
-		Field.setAccessible(fields, true);
-		for(Field f : fields)
-			put(f);
-		return fields;
-	}
 
+	public Field[] declared(Class<?> cls) {
+		if(cls == null)
+			return null;
+		String key = cls.getName();
+		if(perClass.containsKey(key))
+			return perClass.get(key);
+		Field[] fs = null;
+		fs = cls.getDeclaredFields();
+		Field.setAccessible(fs, true);
+		perClass.put(key, fs);
+		for(Field f : fs)
+			declared.put(key + ":" + f.getName(), f);
+		return fs;
+	}
+	
 }

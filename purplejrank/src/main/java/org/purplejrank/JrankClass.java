@@ -71,15 +71,13 @@ public class JrankClass {
 				flags |= JrankConstants.J_SC_WRITE_FIELDS;
 			}
 		}
-		fields = fieldCache.get(cls);
+		fields = fieldCache.declared(cls);
 		Field spf = null;
-		try {
-			spf = fieldCache.get(cls, "serialPersistentFields");
-			if(!Modifier.isStatic(spf.getModifiers()))
-				spf = null;
-			if(!spf.getType().equals(ObjectStreamField[].class))
-				spf = null;
-		} catch(NoSuchFieldException e) {}
+		spf = fieldCache.declared(cls, "serialPersistentFields");
+		if(spf != null && !Modifier.isStatic(spf.getModifiers()))
+			spf = null;
+		if(spf != null && !spf.getType().equals(ObjectStreamField[].class))
+			spf = null;
 		
 		if(spf != null) {
 			try {
@@ -93,10 +91,9 @@ public class JrankClass {
 					fieldNames[i] = pf[i].getName();
 					fieldTypes[i] = className(pf[i].getType());
 					fieldClasses[i] = pf[i].getType();
-					try {
-						fields[fc] = fieldCache.get(cls, pf[i].getName());
+					fields[fc] = fieldCache.declared(cls, pf[i].getName());
+					if(fields[fc] != null)
 						fc++;
-					} catch(NoSuchFieldException e) {}
 				}
 				fields = Arrays.copyOf(fields, fc);
 				return;

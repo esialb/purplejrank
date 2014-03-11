@@ -491,7 +491,7 @@ public class PurpleJrankInput extends ObjectInputStream implements ObjectInput {
 		else
 			clone = ObjenesisHelper.newInstance(cls);
 		for(; cls != null; cls = cls.getSuperclass()) {
-			Field[] fields = fieldCache.get(cls);
+			Field[] fields = fieldCache.declared(cls);
 			for(Field f : fields) {
 				if(Modifier.isStatic(f.getModifiers()) || Modifier.isTransient(f.getModifiers()))
 					continue;
@@ -568,16 +568,16 @@ public class PurpleJrankInput extends ObjectInputStream implements ObjectInput {
 			Field[] fields = new Field[nfields];
 			int fc = 0;
 			for(int i = 0; i < nfields; i++) {
-				try {
-					if(d.getType() == null)
-						continue;
-					Field f = fieldCache.get(d.getType(), fieldNames[i]);
-					if(Modifier.isStatic(f.getModifiers()) || Modifier.isTransient(f.getModifiers()))
-						continue;
-					if(!resolveClass(fieldTypes[i]).equals(f.getType()))
-						continue;
-					fields[fc++] = f;
-				} catch(NoSuchFieldException e) {}
+				if(d.getType() == null)
+					continue;
+				Field f = fieldCache.declared(d.getType(), fieldNames[i]);
+				if(f == null)
+					continue;
+				if(Modifier.isStatic(f.getModifiers()) || Modifier.isTransient(f.getModifiers()))
+					continue;
+				if(!resolveClass(fieldTypes[i]).equals(f.getType()))
+					continue;
+				fields[fc++] = f;
 			}
 			fields = Arrays.copyOf(fields, fc);
 			d.setFields(fields);
