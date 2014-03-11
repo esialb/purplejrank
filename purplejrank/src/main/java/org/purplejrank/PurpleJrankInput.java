@@ -674,16 +674,20 @@ public class PurpleJrankInput extends ObjectInputStream implements ObjectInput {
 
 	@Override
 	public int read(byte[] b) throws IOException {
-		ensureOpen().setBlockMode(true).ensureAvailable(b.length);
-		buf.get(b);
-		return b.length;
+		return read(b, 0, b.length);
 	}
 
 	@Override
 	public int read(byte[] b, int off, int len) throws IOException {
-		ensureOpen().setBlockMode(true).ensureAvailable(len);
-		buf.get(b, off, len);
-		return len;
+		setBlockMode(true);
+		int count = 0;
+		while(count < len) {
+			int r = Math.min(len, buf.capacity());
+			ensureAvailable(r);
+			buf.get(b, off + count, r);
+			count += r;
+		}
+		return count;
 	}
 
 	@Override
