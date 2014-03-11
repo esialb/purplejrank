@@ -21,7 +21,7 @@
 	<parent>
 		<groupId>org.purplejrank</groupId>
 		<artifactId>purplejrank-parent</artifactId>
-		<version>0.1-SNAPSHOT</version>
+		<version>1.0</version>
 		<relativePath>../purplejrank-parent</relativePath>
 	</parent>
 </project>
