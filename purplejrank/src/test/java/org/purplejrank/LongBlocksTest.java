@@ -22,5 +22,6 @@ public class LongBlocksTest {
 		in.readObject();
 		in.read(new byte[1024*1024]);
 		in.readObject();
+		in.close();
 	}
 }

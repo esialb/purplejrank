@@ -1,6 +1,5 @@
 package org.purplejrank;
 
-import java.io.EOFException;
 import java.io.Externalizable;
 import java.io.IOException;
 import java.io.InputStream;
@@ -483,6 +482,7 @@ public class PurpleJrankInput extends ObjectInputStream implements ObjectInput {
 		}
 	}
 
+	@SuppressWarnings({ "rawtypes", "unchecked" })
 	protected Object clone(Object obj) throws IOException {
 		Class<?> cls = obj.getClass();
 		Object clone;
@@ -649,6 +649,7 @@ public class PurpleJrankInput extends ObjectInputStream implements ObjectInput {
 		return Proxy.getProxyClass(cl, ifcs);
 	}
 
+	@SuppressWarnings({ "rawtypes", "unchecked" })
 	protected Object newOrdinaryObject(JrankClass desc) throws IOException, ClassNotFoundException {
 		if(desc.getType() == null)
 			return null;
