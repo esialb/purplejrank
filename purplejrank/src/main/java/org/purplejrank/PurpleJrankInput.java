@@ -387,12 +387,10 @@ public class PurpleJrankInput extends ObjectInputStream implements ObjectInput {
 				for(JrankClass t = d; t != null; t = t.getParent()) {
 					context.offerLast(new JrankContext(t, obj));
 					Method m = null;
-					try {
-						if(
-								t.getType() != null 
-								&& (t.getFlags() & J_SC_WRITE_OBJECT) == J_SC_WRITE_OBJECT)
-							m = methodCache.get(t.getType(), "readObject", ObjectInputStream.class);
-					} catch(NoSuchMethodException e) {}
+					if(
+							t.getType() != null 
+							&& (t.getFlags() & J_SC_WRITE_OBJECT) == J_SC_WRITE_OBJECT)
+						m = methodCache.get(t.getType(), "readObject", ObjectInputStream.class);
 					if(obj == null || t.getType() == null || !t.getType().isInstance(obj))
 						;
 					else if((t.getFlags() & J_SC_WRITE_OBJECT) == J_SC_WRITE_OBJECT) {
@@ -418,10 +416,10 @@ public class PurpleJrankInput extends ObjectInputStream implements ObjectInput {
 				Class<?> unrestored = obj != null ? obj.getClass() : null;
 				while(unrestored != null && Serializable.class.isAssignableFrom(unrestored)) {
 					if(!restoredClasses.contains(unrestored)) {
+						Method m = methodCache.get(unrestored, "readObjectNoData");
 						try {
-							Method m = methodCache.get(unrestored, "readObjectNoData");
-							m.invoke(obj);
-						} catch(NoSuchMethodException e) {
+							if(m != null)
+								m.invoke(obj);
 						} catch(Exception ex) {
 							throw new JrankStreamException(ex);
 						}
@@ -597,10 +595,9 @@ public class PurpleJrankInput extends ObjectInputStream implements ObjectInput {
 			return null;
 		Class<?> cls = obj.getClass();
 		while(cls != null) {
-			try {
-				Method m = methodCache.get(cls, "readResolve");
+			Method m = methodCache.get(cls, "readResolve");
+			if(m != null)
 				return m;
-			} catch(NoSuchMethodException e) {}
 			cls = cls.getSuperclass();
 		}
 		return null;

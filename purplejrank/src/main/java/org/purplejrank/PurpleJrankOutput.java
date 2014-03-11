@@ -270,8 +270,8 @@ public class PurpleJrankOutput extends ObjectOutputStream implements ObjectOutpu
 					continue;
 				context.offerLast(new JrankContext(t, obj));
 				if((t.getFlags() & J_SC_WRITE_OBJECT) == J_SC_WRITE_OBJECT) {
+					Method m = methodCache.get(t.getType(), "writeObject", ObjectOutputStream.class);
 					try {
-						Method m = methodCache.get(t.getType(), "writeObject", ObjectOutputStream.class);
 						m.invoke(obj, this);
 					} catch(Exception e) {
 						throw new JrankStreamException(e);
@@ -335,10 +335,9 @@ public class PurpleJrankOutput extends ObjectOutputStream implements ObjectOutpu
 	protected Method findWriteReplace(Object obj) {
 		Class<?> cls = obj.getClass();
 		while(cls != null) {
-			try {
-				Method m = methodCache.get(cls, "writeReplace");
+			Method m = methodCache.get(cls, "writeReplace");
+			if(m != null)
 				return m;
-			} catch(NoSuchMethodException e) {}
 			cls = cls.getSuperclass();
 		}
 		return null;
