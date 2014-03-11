@@ -31,42 +31,42 @@ public class JrankGetFields extends GetField {
 
 	@Override
 	public boolean get(String name, boolean val) throws IOException {
-		return (Boolean) get(name, val);
+		return (Boolean) get(name, (Object) val);
 	}
 
 	@Override
 	public byte get(String name, byte val) throws IOException {
-		return (Byte) get(name, val);
+		return (Byte) get(name, (Object) val);
 	}
 
 	@Override
 	public char get(String name, char val) throws IOException {
-		return (Character) get(name, val);
+		return (Character) get(name, (Object) val);
 	}
 
 	@Override
 	public short get(String name, short val) throws IOException {
-		return (Short) get(name, val);
+		return (Short) get(name, (Object) val);
 	}
 
 	@Override
 	public int get(String name, int val) throws IOException {
-		return (Integer) get(name, val);
+		return (Integer) get(name, (Object) val);
 	}
 
 	@Override
 	public long get(String name, long val) throws IOException {
-		return (Long) get(name, val);
+		return (Long) get(name, (Object) val);
 	}
 
 	@Override
 	public float get(String name, float val) throws IOException {
-		return (Float) get(name, val);
+		return (Float) get(name, (Object) val);
 	}
 
 	@Override
 	public double get(String name, double val) throws IOException {
-		return (Double) get(name, val);
+		return (Double) get(name, (Object) val);
 	}
 
 	@Override
