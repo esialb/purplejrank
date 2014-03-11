@@ -6,7 +6,7 @@ package org.purplejrank;
  *
  */
 public class JrankConstants {
-	public static final int J_MAX_BLOCK_SIZE = 1024*1024;
+	public static final int J_MAX_BLOCK_SIZE = 64*1024;
 	public static final int J_MAGIC = 0xdeadbeef;
 	public static final int J_VERSION = 1;
 	
