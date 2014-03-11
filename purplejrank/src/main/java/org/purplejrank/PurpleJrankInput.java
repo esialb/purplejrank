@@ -266,7 +266,8 @@ public class PurpleJrankInput extends ObjectInputStream implements ObjectInput {
 		Object obj = null;
 		int handle = -1;
 
-		switch(ensureAvailable(1).get()) {
+		byte b;
+		switch(b = ensureAvailable(1).get()) {
 		case J_NULL:
 			return null;
 
@@ -337,8 +338,6 @@ public class PurpleJrankInput extends ObjectInputStream implements ObjectInput {
 			} else {
 				Set<Class<?>> restoredClasses = new HashSet<Class<?>>();
 				for(JrankClass t = d; t != null; t = t.getParent()) {
-					if((t.getFlags() & J_SC_SERIALIZABLE) == 0)
-						continue;
 					context.offerLast(new JrankContext(t, obj));
 					Method m = null;
 					try {
@@ -399,7 +398,7 @@ public class PurpleJrankInput extends ObjectInputStream implements ObjectInput {
 			break;
 
 		default:
-			throw new StreamCorruptedException();
+			throw new StreamCorruptedException(Byte.toString(b));
 		}
 
 		return obj;

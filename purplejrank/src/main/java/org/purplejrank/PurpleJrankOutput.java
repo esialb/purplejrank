@@ -297,14 +297,15 @@ public class PurpleJrankOutput extends ObjectOutputStream implements ObjectOutpu
 		}
 			
 		if(classdesc.containsKey(cls)) {
-			ensureCapacity(6).put(J_REFERENCE);
-			writeEscapedInt(wired.get(cls));
-			return classdesc.get(cls);
+			ensureCapacity(1).put(J_REFERENCE);
+			JrankClass d = classdesc.get(cls);
+			writeEscapedInt(wired.get(d));
+			return d;
 		}
 		
-		JrankClass d;
-		wired.put(cls, nextHandle++);
-		classdesc.put(cls, d = new JrankClass(cls, fieldCache));
+		JrankClass d = new JrankClass(cls, fieldCache);
+		wired.put(d, nextHandle++);
+		classdesc.put(cls, d);
 		
 		if(d.isProxy()) {
 			ensureCapacity(1).put(J_PROXYCLASSDESC);
@@ -324,7 +325,10 @@ public class PurpleJrankOutput extends ObjectOutputStream implements ObjectOutpu
 			}
 		}
 		
-		d.setParent(writeClassDesc(cls.getSuperclass()));
+		Class<?> sc = cls.getSuperclass();
+		if(sc != null && !Serializable.class.isAssignableFrom(sc))
+			sc = null;
+		d.setParent(writeClassDesc(sc));
 		
 		return d;
 	}

@@ -22,7 +22,7 @@ import org.junit.runners.Parameterized.Parameters;
 public class PurpleJrankTest implements Serializable {
 	private static final long serialVersionUID = 0;
 	
-	@Parameters
+	@Parameters(name = "{0}")
 	public static Iterable<Object[]> params() {
 		List<Object> objs = Arrays.asList(
 				1,
