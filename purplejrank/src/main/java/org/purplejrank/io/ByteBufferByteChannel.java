@@ -41,6 +41,8 @@ public class ByteBufferByteChannel implements ByteChannel {
 
 	@Override
 	public int write(ByteBuffer src) throws IOException {
+		if(!open)
+			throw new IOException("closed");
 		int r = src.remaining();
 		buf.put(src);
 		return r;
