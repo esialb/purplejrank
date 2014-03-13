@@ -309,104 +309,110 @@ public class PurpleJrankInput extends ObjectInputStream implements ObjectInput {
 	protected Object readObject0(boolean shared) throws IOException, ClassNotFoundException {
 		ensureOpen().setBlockMode(false);
 
-		Object obj = null;
-		int handle = -1;
+		context.offerLast(JrankContext.NO_CONTEXT);
+		try {
 
-		byte b;
-		switch(b = ensureAvailable(1).get()) {
-		case J_NULL:
-			return null;
+			Object obj = null;
+			int handle = -1;
 
-		case J_REFERENCE:
-			handle = readEscapedInt();
-			if(shared)
-				return wired.get(handle);
-			obj = clone(wired.get(handle));
-			break;
+			byte b;
+			switch(b = ensureAvailable(1).get()) {
+			case J_NULL:
+				return null;
 
-		case J_ARRAY:
-			JrankClass d = readClassDesc();
-			int size = setBlockMode(false).readEscapedInt();
-			Class<?> cmp = null;
-			if(d.getType() != null)
-				cmp = d.getType().getComponentType();
-			obj = newArray(d, size);
-			wired.add(obj);
-			context.offerLast(new JrankContext(d, obj));
-			try {
-				for(int i = 0; i < size; i++) {
-					Object v;
+			case J_REFERENCE:
+				handle = readEscapedInt();
+				if(shared)
+					return wired.get(handle);
+				obj = clone(wired.get(handle));
+				break;
 
-					if(cmp == byte.class) v = ensureAvailable(1).get();
-					else if(cmp == char.class) v = ensureAvailable(2).getChar();
-					else if(cmp == double.class) v = ensureAvailable(8).getDouble();
-					else if(cmp == float.class) v = ensureAvailable(4).getFloat();
-					else if(cmp == int.class) v = ensureAvailable(4).getInt();
-					else if(cmp == long.class) v = ensureAvailable(8).getLong();
-					else if(cmp == short.class) v = ensureAvailable(2).getShort();
-					else if(cmp == boolean.class) v = ensureAvailable(1).get() != 0;
-					else v = readObject0(true);
-
-					setArrayElement(obj, i, v);
-
-					setBlockMode(false);
-				}
-			} finally {
-				context.pollLast();
-			}
-			break;
-
-		case J_STRING:
-			obj = readUTF(false);
-			wired.add(obj);
-			break;
-
-		case J_ENUM:
-			d = readClassDesc();
-			String name = (String) readObject0(true);
-			obj = Enum.valueOf(d.getType().asSubclass(Enum.class), name);
-			wired.add(obj);
-			break;
-
-		case J_CLASS:
-			d = readClassDesc();
-			obj = resolveClass(d);
-			wired.add(obj);
-			break;
-			
-		case J_OBJECT:
-			d = readClassDesc();
-			obj = newOrdinaryObject(d);
-			handle = wired.size();
-			wired.add(obj);
-
-			if((d.getFlags() & J_SC_WRITE_EXTERNAL) == J_SC_WRITE_EXTERNAL) {
-				readExternalizableObject(d, obj);
-			} else {
-				readSerializableObject(d, obj);
-			}
-			
-			setBlockMode(false).ensureAvailable(1);
-			if(buf.get() != J_WALL)
-				throw new StreamCorruptedException();
-
-			Method m = findReadResolve(obj);
-			if(m != null) {
+			case J_ARRAY:
+				JrankClass d = readClassDesc();
+				int size = setBlockMode(false).readEscapedInt();
+				Class<?> cmp = null;
+				if(d.getType() != null)
+					cmp = d.getType().getComponentType();
+				obj = newArray(d, size);
+				wired.add(obj);
+				context.offerLast(new JrankContext(d, obj));
 				try {
-					obj = m.invoke(obj);
-					wired.set(handle, obj);
-				} catch(Exception e) {
-					throw new JrankStreamException(e);
+					for(int i = 0; i < size; i++) {
+						Object v;
+
+						if(cmp == byte.class) v = ensureAvailable(1).get();
+						else if(cmp == char.class) v = ensureAvailable(2).getChar();
+						else if(cmp == double.class) v = ensureAvailable(8).getDouble();
+						else if(cmp == float.class) v = ensureAvailable(4).getFloat();
+						else if(cmp == int.class) v = ensureAvailable(4).getInt();
+						else if(cmp == long.class) v = ensureAvailable(8).getLong();
+						else if(cmp == short.class) v = ensureAvailable(2).getShort();
+						else if(cmp == boolean.class) v = ensureAvailable(1).get() != 0;
+						else v = readObject0(true);
+
+						setArrayElement(obj, i, v);
+
+						setBlockMode(false);
+					}
+				} finally {
+					context.pollLast();
 				}
+				break;
+
+			case J_STRING:
+				obj = readUTF(false);
+				wired.add(obj);
+				break;
+
+			case J_ENUM:
+				d = readClassDesc();
+				String name = (String) readObject0(true);
+				obj = Enum.valueOf(d.getType().asSubclass(Enum.class), name);
+				wired.add(obj);
+				break;
+
+			case J_CLASS:
+				d = readClassDesc();
+				obj = resolveClass(d);
+				wired.add(obj);
+				break;
+
+			case J_OBJECT:
+				d = readClassDesc();
+				obj = newOrdinaryObject(d);
+				handle = wired.size();
+				wired.add(obj);
+
+				if((d.getFlags() & J_SC_WRITE_EXTERNAL) == J_SC_WRITE_EXTERNAL) {
+					readExternalizableObject(d, obj);
+				} else {
+					readSerializableObject(d, obj);
+				}
+
+				setBlockMode(false).ensureAvailable(1);
+				if(buf.get() != J_WALL)
+					throw new StreamCorruptedException();
+
+				Method m = findReadResolve(obj);
+				if(m != null) {
+					try {
+						obj = m.invoke(obj);
+						wired.set(handle, obj);
+					} catch(Exception e) {
+						throw new JrankStreamException(e);
+					}
+				}
+
+				break;
+
+			default:
+				throw new StreamCorruptedException(Byte.toString(b));
 			}
 
-			break;
-
-		default:
-			throw new StreamCorruptedException(Byte.toString(b));
+			return obj;
+		} finally {
+			context.pollLast();
 		}
-
-		return obj;
 	}
 
 	protected void readExternalizableObject(JrankClass desc, Object obj)
