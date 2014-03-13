@@ -378,67 +378,9 @@ public class PurpleJrankInput extends ObjectInputStream implements ObjectInput {
 			wired.add(obj);
 
 			if((d.getFlags() & J_SC_WRITE_EXTERNAL) == J_SC_WRITE_EXTERNAL) {
-				context.offerLast(JrankContext.NO_CONTEXT); // context not available for Externalizable
-				if(obj != null) {
-					if(obj instanceof Externalizable)
-						((Externalizable) obj).readExternal(this);
-					else {
-						Method m = methodCache.find(obj.getClass(), "readExternal", ObjectInput.class);
-						if(m != null) {
-							try {
-								m.invoke(obj, this);
-							} catch(Exception e) {
-								throw new JrankStreamException(e);
-							}
-						}
-					}
-				}
-				skipOptionalData();
-				context.pollLast();
+				readExternalizableObject(d, obj);
 			} else {
-				Set<Class<?>> restoredClasses = new HashSet<Class<?>>();
-				for(JrankClass t = d; t != null; t = t.getParent()) {
-					context.offerLast(new JrankContext(t, obj));
-					Method m = null;
-					if(
-							t.getType() != null 
-							&& (t.getFlags() & J_SC_WRITE_OBJECT) == J_SC_WRITE_OBJECT)
-						m = methodCache.declared(t.getType(), "readObject", ObjectInputStream.class);
-					if(obj == null || t.getType() == null || !t.getType().isInstance(obj))
-						;
-					else if((t.getFlags() & J_SC_WRITE_OBJECT) == J_SC_WRITE_OBJECT) {
-						restoredClasses.add(t.getType());
-						try {
-							if(m != null)
-								m.invoke(obj, this);
-							else
-								defaultReadObject();
-						} catch(Exception ex) {
-							throw new JrankStreamException(ex);
-						}
-					} else {
-						restoredClasses.add(t.getType());
-						defaultReadObject();
-					}
-					skipOptionalData();
-					setBlockMode(false).ensureAvailable(1);
-					if(buf.get() != J_WALL)
-						throw new StreamCorruptedException();
-					context.pollLast();
-				}
-				Class<?> unrestored = obj != null ? obj.getClass() : null;
-				while(unrestored != null && Serializable.class.isAssignableFrom(unrestored)) {
-					if(!restoredClasses.contains(unrestored)) {
-						Method m = methodCache.declared(unrestored, "readObjectNoData");
-						try {
-							if(m != null)
-								m.invoke(obj);
-						} catch(Exception ex) {
-							throw new JrankStreamException(ex);
-						}
-					}
-					unrestored = unrestored.getSuperclass();
-				}
+				readSerializableObject(d, obj);
 			}
 			
 			setBlockMode(false).ensureAvailable(1);
@@ -464,6 +406,77 @@ public class PurpleJrankInput extends ObjectInputStream implements ObjectInput {
 		return obj;
 	}
 
+	protected void readExternalizableObject(JrankClass desc, Object obj)
+	throws IOException, ClassNotFoundException  {
+		context.offerLast(JrankContext.NO_CONTEXT); // context not available for Externalizable
+		try {
+			if(obj != null) {
+				if(obj instanceof Externalizable)
+					((Externalizable) obj).readExternal(this);
+				else {
+					Method m = methodCache.find(obj.getClass(), "readExternal", ObjectInput.class);
+					if(m != null) {
+						try {
+							m.invoke(obj, this);
+						} catch(Exception e) {
+							throw new JrankStreamException(e);
+						}
+					}
+				}
+			}
+			skipOptionalData();
+		} finally {
+			context.pollLast();
+		}
+	}
+	
+	protected void readSerializableObject(JrankClass desc, Object obj)
+	throws IOException, ClassNotFoundException {
+		Set<Class<?>> restoredClasses = new HashSet<Class<?>>();
+		for(JrankClass t = desc; t != null; t = t.getParent()) {
+			context.offerLast(new JrankContext(t, obj));
+			Method m = null;
+			if(
+					t.getType() != null 
+					&& (t.getFlags() & J_SC_WRITE_OBJECT) == J_SC_WRITE_OBJECT)
+				m = methodCache.declared(t.getType(), "readObject", ObjectInputStream.class);
+			if(obj == null || t.getType() == null || !t.getType().isInstance(obj))
+				;
+			else if((t.getFlags() & J_SC_WRITE_OBJECT) == J_SC_WRITE_OBJECT) {
+				restoredClasses.add(t.getType());
+				try {
+					if(m != null)
+						m.invoke(obj, this);
+					else
+						defaultReadObject();
+				} catch(Exception ex) {
+					throw new JrankStreamException(ex);
+				}
+			} else {
+				restoredClasses.add(t.getType());
+				defaultReadObject();
+			}
+			skipOptionalData();
+			setBlockMode(false).ensureAvailable(1);
+			if(buf.get() != J_WALL)
+				throw new StreamCorruptedException();
+			context.pollLast();
+		}
+		Class<?> unrestored = obj != null ? obj.getClass() : null;
+		while(unrestored != null && Serializable.class.isAssignableFrom(unrestored)) {
+			if(!restoredClasses.contains(unrestored)) {
+				Method m = methodCache.declared(unrestored, "readObjectNoData");
+				try {
+					if(m != null)
+						m.invoke(obj);
+				} catch(Exception ex) {
+					throw new JrankStreamException(ex);
+				}
+			}
+			unrestored = unrestored.getSuperclass();
+		}
+	}
+	
 	protected Object newArray(JrankClass desc, int size) {
 		Class<?> cmp;
 		if(desc.getType() != null) {
