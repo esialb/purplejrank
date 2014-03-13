@@ -333,24 +333,27 @@ public class PurpleJrankInput extends ObjectInputStream implements ObjectInput {
 			obj = newArray(d, size);
 			wired.add(obj);
 			context.offerLast(new JrankContext(d, obj));
-			for(int i = 0; i < size; i++) {
-				Object v;
+			try {
+				for(int i = 0; i < size; i++) {
+					Object v;
 
-				if(cmp == byte.class) v = ensureAvailable(1).get();
-				else if(cmp == char.class) v = ensureAvailable(2).getChar();
-				else if(cmp == double.class) v = ensureAvailable(8).getDouble();
-				else if(cmp == float.class) v = ensureAvailable(4).getFloat();
-				else if(cmp == int.class) v = ensureAvailable(4).getInt();
-				else if(cmp == long.class) v = ensureAvailable(8).getLong();
-				else if(cmp == short.class) v = ensureAvailable(2).getShort();
-				else if(cmp == boolean.class) v = ensureAvailable(1).get() != 0;
-				else v = readObject0(true);
+					if(cmp == byte.class) v = ensureAvailable(1).get();
+					else if(cmp == char.class) v = ensureAvailable(2).getChar();
+					else if(cmp == double.class) v = ensureAvailable(8).getDouble();
+					else if(cmp == float.class) v = ensureAvailable(4).getFloat();
+					else if(cmp == int.class) v = ensureAvailable(4).getInt();
+					else if(cmp == long.class) v = ensureAvailable(8).getLong();
+					else if(cmp == short.class) v = ensureAvailable(2).getShort();
+					else if(cmp == boolean.class) v = ensureAvailable(1).get() != 0;
+					else v = readObject0(true);
 
-				setArrayElement(obj, i, v);
+					setArrayElement(obj, i, v);
 
-				setBlockMode(false);
+					setBlockMode(false);
+				}
+			} finally {
+				context.pollLast();
 			}
-			context.pollLast();
 			break;
 
 		case J_STRING:
@@ -435,32 +438,35 @@ public class PurpleJrankInput extends ObjectInputStream implements ObjectInput {
 		Set<Class<?>> restoredClasses = new HashSet<Class<?>>();
 		for(JrankClass t = desc; t != null; t = t.getParent()) {
 			context.offerLast(new JrankContext(t, obj));
-			Method m = null;
-			if(
-					t.getType() != null 
-					&& (t.getFlags() & J_SC_WRITE_OBJECT) == J_SC_WRITE_OBJECT)
-				m = methodCache.declared(t.getType(), "readObject", ObjectInputStream.class);
-			if(obj == null || t.getType() == null || !t.getType().isInstance(obj))
-				;
-			else if((t.getFlags() & J_SC_WRITE_OBJECT) == J_SC_WRITE_OBJECT) {
-				restoredClasses.add(t.getType());
-				try {
-					if(m != null)
-						m.invoke(obj, this);
-					else
-						defaultReadObject();
-				} catch(Exception ex) {
-					throw new JrankStreamException(ex);
+			try {
+				Method m = null;
+				if(
+						t.getType() != null 
+						&& (t.getFlags() & J_SC_WRITE_OBJECT) == J_SC_WRITE_OBJECT)
+					m = methodCache.declared(t.getType(), "readObject", ObjectInputStream.class);
+				if(obj == null || t.getType() == null || !t.getType().isInstance(obj))
+					;
+				else if((t.getFlags() & J_SC_WRITE_OBJECT) == J_SC_WRITE_OBJECT) {
+					restoredClasses.add(t.getType());
+					try {
+						if(m != null)
+							m.invoke(obj, this);
+						else
+							defaultReadObject();
+					} catch(Exception ex) {
+						throw new JrankStreamException(ex);
+					}
+				} else {
+					restoredClasses.add(t.getType());
+					defaultReadObject();
 				}
-			} else {
-				restoredClasses.add(t.getType());
-				defaultReadObject();
+				skipOptionalData();
+				setBlockMode(false).ensureAvailable(1);
+				if(buf.get() != J_WALL)
+					throw new StreamCorruptedException();
+			} finally {
+				context.pollLast();
 			}
-			skipOptionalData();
-			setBlockMode(false).ensureAvailable(1);
-			if(buf.get() != J_WALL)
-				throw new StreamCorruptedException();
-			context.pollLast();
 		}
 		Class<?> unrestored = obj != null ? obj.getClass() : null;
 		while(unrestored != null && Serializable.class.isAssignableFrom(unrestored)) {
