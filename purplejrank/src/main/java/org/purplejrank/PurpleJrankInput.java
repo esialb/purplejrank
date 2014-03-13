@@ -3,6 +3,7 @@ package org.purplejrank;
 import java.io.Externalizable;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InvalidClassException;
 import java.io.InvalidObjectException;
 import java.io.NotActiveException;
 import java.io.ObjectInput;
@@ -430,7 +431,8 @@ public class PurpleJrankInput extends ObjectInputStream implements ObjectInput {
 						} catch(Exception e) {
 							throw new JrankStreamException(e);
 						}
-					}
+					} else
+						throw new InvalidClassException(desc.getName(), "serialized as Externalizable but resolved to non-Externalizable with no readExternal");
 				}
 			}
 			skipOptionalData();
