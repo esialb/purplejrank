@@ -5,8 +5,9 @@ import java.io.IOException;
 import org.purplejrank.jdk.Block;
 import org.purplejrank.jdk.JdkBlock;
 import org.purplejrank.jdk.JdkStream;
+import org.purplejrank.jdk.rule.ObjectRule;
 
-public class ClassdescBlock extends JdkBlock {
+public class ClassdescBlock extends JdkBlock implements ObjectRule {
 
 	public ClassdescBlock(JdkStream jdk) {
 		super(jdk);
