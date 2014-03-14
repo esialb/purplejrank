@@ -5,8 +5,9 @@ import java.io.IOException;
 import org.purplejrank.jdk.Block;
 import org.purplejrank.jdk.JdkBlock;
 import org.purplejrank.jdk.JdkStream;
+import org.purplejrank.jdk.rule.BlockdataRule;
 
-public class BlockdataBlock extends JdkBlock {
+public class BlockdataBlock extends JdkBlock implements BlockdataRule {
 
 	public BlockdataBlock(JdkStream jdk) {
 		super(jdk);

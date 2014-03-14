@@ -2,6 +2,6 @@ package org.purplejrank.jdk.rule;
 
 import org.purplejrank.jdk.Block;
 
-public interface ObjectRule extends ContentRule {
+public interface ContentRule extends Block {
 
 }
