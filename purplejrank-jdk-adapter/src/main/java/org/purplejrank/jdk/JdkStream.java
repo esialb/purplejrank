@@ -12,6 +12,7 @@ import org.purplejrank.jdk.block.BlockdataBlock;
 import org.purplejrank.jdk.block.BlockdatalongBlock;
 import org.purplejrank.jdk.block.ClassBlock;
 import org.purplejrank.jdk.block.ClassdescBlock;
+import org.purplejrank.jdk.block.EndblockdataBlock;
 import org.purplejrank.jdk.block.EnumBlock;
 import org.purplejrank.jdk.block.ExceptionBlock;
 import org.purplejrank.jdk.block.HeaderBlock;
@@ -43,6 +44,7 @@ public class JdkStream extends DataInputStream {
 		case TC_ARRAY: return new ArrayBlock(this).parse();
 		case TC_CLASS: return new ClassBlock(this).parse();
 		case TC_BLOCKDATA: return new BlockdataBlock(this).parse();
+		case TC_ENDBLOCKDATA: return new EndblockdataBlock(this).parse();
 		case TC_RESET: return new ResetBlock(this).parse();
 		case TC_BLOCKDATALONG: return new BlockdatalongBlock(this).parse();
 		case TC_EXCEPTION: return new ExceptionBlock(this).parse();
