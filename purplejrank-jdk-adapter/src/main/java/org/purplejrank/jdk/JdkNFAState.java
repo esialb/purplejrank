@@ -1,6 +1,6 @@
 package org.purplejrank.jdk;
 
-public enum JdkDFAState {
+public enum JdkNFAState {
 	stream,
 	stream$magic,
 	stream$magic$version,
