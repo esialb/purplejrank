@@ -62,7 +62,7 @@ public class JdkNFARule implements Comparable<JdkNFARule> {
 		do {
 			changed = false;
 			for(JdkNFARule rule : rules) {
-				if(rule.via != null)
+				if(rule.consumes != null)
 					continue;
 				for(JdkNFARule r2 : rules) {
 					if(rule.to == r2.from)
@@ -72,10 +72,10 @@ public class JdkNFARule implements Comparable<JdkNFARule> {
 		} while(changed);
 		
 		for(JdkNFARule rule : rules) {
-			if(rule.via != null)
+			if(rule.consumes != null)
 				rule.derivedVia.clear();
 			else
-				rule.via = new JdkNFAToken[0];
+				rule.consumes = new JdkNFAToken[0];
 		}
 		
 		Collections.sort(rules);
@@ -89,7 +89,7 @@ public class JdkNFARule implements Comparable<JdkNFARule> {
 
 	protected JdkNFAState from;
 	protected JdkNFAState to;
-	protected JdkNFAToken[] via;
+	protected JdkNFAToken[] consumes;
 	protected Set<JdkNFAToken> derivedVia = EnumSet.noneOf(JdkNFAToken.class);
 
 	JdkNFARule(JdkNFAState from, JdkNFAState to, JdkNFAToken... via) {
@@ -97,16 +97,16 @@ public class JdkNFARule implements Comparable<JdkNFARule> {
 		this.from = from;
 		this.to = to;
 		if(via.length > 0) {
-			this.via = via;
+			this.consumes = via;
 			this.derivedVia.addAll(Arrays.asList(via));
 		}
 		else
-			this.via = null;
+			this.consumes = null;
 	}
 	
 	@Override
 	public String toString() {
-		return from + " -> " + Arrays.asList(via) + derivedVia + " -> " + to;
+		return from + " -> " + Arrays.asList(consumes) + derivedVia + " -> " + to;
 	}
 
 	@Override
@@ -125,8 +125,8 @@ public class JdkNFARule implements Comparable<JdkNFARule> {
 		return from;
 	}
 
-	public JdkNFAToken[] getVia() {
-		return via;
+	public JdkNFAToken[] getConsumes() {
+		return consumes;
 	}
 
 	public JdkNFAToken[] getDerivedVia() {
