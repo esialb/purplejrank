@@ -8,8 +8,7 @@ public enum JdkNFAState {
 	
 	contents,
 	contents$content,
-	contents$contents,
-	contents$contents$content,
+	contents$content$contents,
 	
 	content,
 	content$object,
@@ -184,15 +183,14 @@ public enum JdkNFAState {
 	exception$TC_EXCEPTION$reset$object,
 	exception$TC_EXCEPTION$reset$object$reset,
 	
-	magic,
-	magic$STREAM_MAGIC,
-	
-	version,
-	version$STREAM_VERSION,
-	
 	values,
 	
 	newHandle,
 	
 	reset,
+	;
+	
+	public JdkNFARule to(JdkNFAState to, JdkNFAToken... via) {
+		return new JdkNFARule(this, to, via);
+	}
 }
