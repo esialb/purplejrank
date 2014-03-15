@@ -7,12 +7,14 @@ import java.nio.ByteBuffer;
 
 import org.purplejrank.JrankConstants;
 
-public abstract class PullInputStream extends FilterInputStream {
+public abstract class PullInputStream extends InputStream {
 
 	protected ByteBuffer buf = ByteBuffer.allocateDirect(JrankConstants.J_MAX_BLOCK_SIZE);
+	protected InputStream in;
 	
-	protected PullInputStream(InputStream in) {
-		super(in);
+	
+	public PullInputStream(InputStream in) {
+		this.in = in;
 	}
 	
 	protected abstract int pull() throws IOException;
