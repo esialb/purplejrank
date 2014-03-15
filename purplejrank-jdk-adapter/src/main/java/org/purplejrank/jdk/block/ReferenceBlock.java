@@ -8,17 +8,20 @@ import org.purplejrank.jdk.JdkBlock;
 import org.purplejrank.jdk.JdkStream;
 import org.purplejrank.jdk.rule.ClassdescRule;
 import org.purplejrank.jdk.rule.ObjectRule;
+import org.purplejrank.jdk.rule.StringRule;
 
-public class ReferenceBlock extends JdkBlock implements ObjectRule, ClassdescRule {
+public class ReferenceBlock extends JdkBlock implements ObjectRule, ClassdescRule, StringRule {
 
+	protected int handle;
+	
 	public ReferenceBlock(JdkStream jdk) {
 		super(jdk);
 	}
 
 	@Override
 	public Block parse() throws IOException {
-		// TODO Auto-generated method stub
-		return null;
+		handle = jdk.readInt();
+		return this;
 	}
 
 	@Override
