@@ -472,9 +472,11 @@ public class PurpleJrankInput extends ObjectInputStream implements ObjectInput {
 
 			case J_ENUM: // read an enum
 				d = readClassDesc();
+				wired.add(null);
+				handle = wired.size() - 1;
 				String name = (String) readObject0(true);
 				obj = Enum.valueOf(d.getType().asSubclass(Enum.class), name);
-				wired.add(obj);
+				wired.set(handle, obj);
 				break;
 
 			case J_CLASS: // read a class
