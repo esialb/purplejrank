@@ -31,21 +31,51 @@ import static org.purplejrank.JrankConstants.*;
 
 /**
  * Extension of {@link ObjectOutputStream} with a protocol based on {@link ObjectOutputStream}
- * but slightly more robust.
+ * but slightly more robust.  Writes to a {@link WritableByteChannel} rather than an {@link OutputStream}
  * @author robin
  *
  */
 public class PurpleJrankOutput extends ObjectOutputStream implements ObjectOutput {
+	/**
+	 * The backing {@link WritableByteChannel}
+	 */
 	protected WritableByteChannel out;
+	/**
+	 * Write buffer
+	 */
 	protected ByteBuffer buf = ByteBuffer.allocateDirect(J_MAX_BLOCK_SIZE);
+	/**
+	 * Whether the write buffer currently contains block data
+	 */
 	protected boolean blockMode = false;
+	/**
+	 * Temp buffer used for writing block headers
+	 */
 	protected ByteBuffer blockHeader = ByteBuffer.allocateDirect(6);
 	
+	/**
+	 * Reflection cache of fields
+	 */
 	protected FieldCache fieldCache = new FieldCache();
+	/**
+	 * Reflection cache of methods
+	 */
 	protected MethodCache methodCache = new MethodCache();
+	/**
+	 * Wire handles by object
+	 */
 	protected Map<Object, Integer> wired = new IdentityHashMap<Object, Integer>();
+	/**
+	 * The next wire handle
+	 */
 	protected int nextHandle = 0;
+	/**
+	 * Class descriptors by class
+	 */
 	protected Map<Class<?>, JrankClass> classdesc = new IdentityHashMap<Class<?>, JrankClass>();
+	/**
+	 * Serialization contects for writeObject
+	 */
 	protected Deque<JrankContext> context = new ArrayDeque<JrankContext>(Arrays.asList(JrankContext.NO_CONTEXT));
 	
 	public PurpleJrankOutput(OutputStream out) throws IOException {
@@ -59,12 +89,23 @@ public class PurpleJrankOutput extends ObjectOutputStream implements ObjectOutpu
 		dump();
 	}
 	
+	/**
+	 * Ensure the output is open
+	 * @return
+	 * @throws IOException
+	 */
 	protected PurpleJrankOutput ensureOpen() throws IOException {
 		if(!out.isOpen())
 			throw new JrankStreamException("channel closed");
 		return this;
 	}
 	
+	/**
+	 * Set the block writing mode.  Dumps the buffer if the mode changes.
+	 * @param blockMode
+	 * @return
+	 * @throws IOException
+	 */
 	protected PurpleJrankOutput setBlockMode(boolean blockMode) throws IOException {
 		if(blockMode != this.blockMode)
 			dump();
@@ -72,6 +113,12 @@ public class PurpleJrankOutput extends ObjectOutputStream implements ObjectOutpu
 		return this;
 	} 
 	
+	/**
+	 * Dump the buffer if its remaining size is less than the required capacity
+	 * @param capacity
+	 * @return
+	 * @throws IOException
+	 */
 	protected ByteBuffer ensureCapacity(int capacity) throws IOException {
 		if(buf.remaining() < capacity)
 			dump();
@@ -130,6 +177,11 @@ public class PurpleJrankOutput extends ObjectOutputStream implements ObjectOutpu
 			writeChar(s.charAt(i));
 	}
 	
+	/**
+	 * Write an escaped int.  For non-negative ints this tends to be smaller than {@link #writeInt(int)}
+	 * @param v
+	 * @throws IOException
+	 */
 	protected void writeEscapedInt(int v) throws IOException {
 		ensureCapacity(1);
 		if((v & 0x7f) != v) {
@@ -138,7 +190,13 @@ public class PurpleJrankOutput extends ObjectOutputStream implements ObjectOutpu
 		} else
 			buf.put((byte)v);
 	}
-	
+
+	/**
+	 * Write an escaped int.  For non-negative ints this tends to be smaller than {@link #writeInt(int)}
+	 * @param buf
+	 * @param v
+	 * @throws IOException
+	 */
 	protected void writeEscapedInt(ByteBuffer buf, int v) throws IOException {
 		if((v & 0x7f) != v) {
 			buf.put((byte)(0x80 | (0x7f & v)));
@@ -147,6 +205,11 @@ public class PurpleJrankOutput extends ObjectOutputStream implements ObjectOutpu
 			buf.put((byte)v);
 	}
 
+	/**
+	 * Write an escaped long.  For non-negative longs this tends to be smaller than {@link #writeLong(long)}
+	 * @param v
+	 * @throws IOException
+	 */
 	protected void writeEscapedLong(long v) throws IOException {
 		ensureCapacity(1);
 		if((v & 0x7f) != v) {
@@ -161,6 +224,13 @@ public class PurpleJrankOutput extends ObjectOutputStream implements ObjectOutpu
 		writeUTF(s, true);
 	}
 	
+	/**
+	 * Write a string using escaped ints for the character numbers, with
+	 * a specified block mode
+	 * @param s
+	 * @param blockMode
+	 * @throws IOException
+	 */
 	protected void writeUTF(String s, boolean blockMode) throws IOException {
 		// Instead of the JRE's modified UTF-8, write bit-8-escaped ints
 		setBlockMode(blockMode);
@@ -179,17 +249,24 @@ public class PurpleJrankOutput extends ObjectOutputStream implements ObjectOutpu
 		flush();
 	}
 	
+	/**
+	 * Write an object to the stream
+	 * @param obj
+	 * @param shared
+	 * @throws IOException
+	 */
 	protected void writeObject0(Object obj, boolean shared) throws IOException {
 		ensureOpen().setBlockMode(false);
 		
-		if(obj == null) {
+		if(obj == null) { // write a null
 			ensureCapacity(1).put(J_NULL);
 			return;
 		}
 		
-		if(!(obj instanceof Serializable))
+		if(!(obj instanceof Serializable)) // require objects be Serializable
 			throw new NotSerializableException(obj.getClass().getName());
 		
+		// Write a reference if writing in shared mode and the object has already been written
 		if(shared && wired.containsKey(obj)) {
 			ensureCapacity(6).put(J_REFERENCE);
 			writeEscapedInt(wired.get(obj));
@@ -198,6 +275,7 @@ public class PurpleJrankOutput extends ObjectOutputStream implements ObjectOutpu
 		
 		Object preReplace = obj;
 		
+		// Call writeReplace if available
 		Method writeReplace = findWriteReplace(obj);
 		if(writeReplace != null) {
 			try {
@@ -207,7 +285,7 @@ public class PurpleJrankOutput extends ObjectOutputStream implements ObjectOutpu
 			}
 		}
 		
-		if(obj.getClass().isArray()) {
+		if(obj.getClass().isArray()) { // write an array
 			ensureCapacity(1).put(J_ARRAY);
 			JrankClass d = writeClassDesc(obj.getClass());
 			if(!wired.containsKey(obj))
@@ -217,6 +295,7 @@ public class PurpleJrankOutput extends ObjectOutputStream implements ObjectOutpu
 			Class<?> cmp = obj.getClass().getComponentType();
 			context.offerLast(new JrankContext(d, obj));
 			for(int i = 0; i < size; i++) {
+				// primitive data is blocked
 				if(cmp == byte.class) ensureCapacity(1).put(Array.getByte(obj, i));
 				else if(cmp == char.class) ensureCapacity(2).putChar(Array.getChar(obj, i));
 				else if(cmp == double.class) ensureCapacity(8).putDouble(Array.getDouble(obj, i));
@@ -231,7 +310,7 @@ public class PurpleJrankOutput extends ObjectOutputStream implements ObjectOutpu
 			return;
 		}
 		
-		if(obj instanceof String) {
+		if(obj instanceof String) { // write a string
 			if(!wired.containsKey(obj))
 				wired.put(obj, nextHandle++);
 			ensureCapacity(1).put(J_STRING);
@@ -239,7 +318,7 @@ public class PurpleJrankOutput extends ObjectOutputStream implements ObjectOutpu
 			return;
 		}
 		
-		if(obj instanceof Enum<?>) {
+		if(obj instanceof Enum<?>) { // write an enum
 			ensureCapacity(1).put(J_ENUM);
 			writeClassDesc(obj.getClass());
 			writeObject0(((Enum<?>) obj).name(), true);
@@ -247,13 +326,14 @@ public class PurpleJrankOutput extends ObjectOutputStream implements ObjectOutpu
 			return;
 		}
 		
-		if(obj instanceof Class<?>) {
+		if(obj instanceof Class<?>) { // write a class
 			ensureCapacity(1).put(J_CLASS);
 			writeClassDesc((Class<?>) obj);
 			wired.put(obj, nextHandle++);
 			return;
 		}
 		
+		// write a new (or unshared) object
 		ensureCapacity(1).put(J_OBJECT);
 		JrankClass d = writeClassDesc(obj.getClass());
 		if(!wired.containsKey(obj)) {
@@ -263,20 +343,23 @@ public class PurpleJrankOutput extends ObjectOutputStream implements ObjectOutpu
 		}
 		
 		if((d.getFlags() & J_SC_WRITE_EXTERNAL) == J_SC_WRITE_EXTERNAL) {
-			context.offerLast(new JrankContext(d, obj));
+			// externalizable
+			context.offerLast(JrankContext.NO_CONTEXT); // no writeObject context for writeExternal
 			((Externalizable) obj).writeExternal(this);
 			context.pollLast();
 			setBlockMode(false).ensureCapacity(1).put(J_WALL);
 		} else {
-			List<JrankClass> rc = new ArrayList<JrankClass>();
+			// serializable
+			List<JrankClass> rc = new ArrayList<JrankClass>(); // class descriptors in reverse order
 			for(JrankClass t = d; t != null; t = t.getParent()) {
 				rc.add(0, t);
 			}
 			for(JrankClass t : rc) {
-				if((t.getFlags() & J_SC_SERIALIZABLE) == 0)
+				if((t.getFlags() & J_SC_SERIALIZABLE) == 0) // don't write non-serializable classes
 					continue;
-				context.offerLast(new JrankContext(t, obj));
+				context.offerLast(new JrankContext(t, obj)); // writeObject context
 				if((t.getFlags() & J_SC_WRITE_OBJECT) == J_SC_WRITE_OBJECT) {
+					// invoke writeObject
 					Method m = methodCache.declared(t.getType(), "writeObject", ObjectOutputStream.class);
 					try {
 						m.invoke(obj, this);
@@ -284,8 +367,10 @@ public class PurpleJrankOutput extends ObjectOutputStream implements ObjectOutpu
 						throw new JrankStreamException(e);
 					}
 				} else {
+					// just write the fields
 					defaultWriteObject();
 				}
+				// drop a wall
 				setBlockMode(false).ensureCapacity(1).put(J_WALL);
 				context.pollLast();
 			}
@@ -293,6 +378,12 @@ public class PurpleJrankOutput extends ObjectOutputStream implements ObjectOutpu
 		
 	}
 	
+	/**
+	 * Write a class descriptor
+	 * @param cls
+	 * @return
+	 * @throws IOException
+	 */
 	protected JrankClass writeClassDesc(Class<?> cls) throws IOException {
 		setBlockMode(false);
 		
@@ -301,7 +392,7 @@ public class PurpleJrankOutput extends ObjectOutputStream implements ObjectOutpu
 			return null;
 		}
 			
-		if(classdesc.containsKey(cls)) {
+		if(classdesc.containsKey(cls)) { // reference to previous class descriptor
 			ensureCapacity(1).put(J_REFERENCE);
 			JrankClass d = classdesc.get(cls);
 			writeEscapedInt(wired.get(d));
@@ -312,12 +403,12 @@ public class PurpleJrankOutput extends ObjectOutputStream implements ObjectOutpu
 		wired.put(d, nextHandle++);
 		classdesc.put(cls, d);
 		
-		if(d.isProxy()) {
+		if(d.isProxy()) { // proxy class
 			ensureCapacity(1).put(J_PROXYCLASSDESC);
 			writeEscapedInt(d.getProxyInterfaceNames().length);
 			for(String ifc : d.getProxyInterfaceNames())
 				writeUTF(ifc, false);
-		} else {
+		} else { // concrete class
 			ensureCapacity(1).put(J_CLASSDESC);
 			writeUTF(d.getName(), false);
 			writeEscapedLong(ObjectStreamClass.lookupAny(cls).getSerialVersionUID());
@@ -330,6 +421,7 @@ public class PurpleJrankOutput extends ObjectOutputStream implements ObjectOutpu
 			}
 		}
 		
+		// write parent descriptor
 		Class<?> sc = cls.getSuperclass();
 		if(sc != null && !Serializable.class.isAssignableFrom(sc))
 			sc = null;
@@ -338,6 +430,11 @@ public class PurpleJrankOutput extends ObjectOutputStream implements ObjectOutpu
 		return d;
 	}
 	
+	/**
+	 * Find a {@link Method} to invoke as writeReplace
+	 * @param obj
+	 * @return
+	 */
 	protected Method findWriteReplace(Object obj) {
 		Class<?> cls = obj.getClass();
 		return methodCache.find(cls, "writeReplace");
@@ -367,6 +464,10 @@ public class PurpleJrankOutput extends ObjectOutputStream implements ObjectOutpu
 		}
 	}
 
+	/**
+	 * Dump the buffer to {@link #out} but don't flush
+	 * @throws IOException
+	 */
 	protected void dump() throws IOException {
 		ensureOpen();
 		if(this.blockMode && buf.position() > 0) {
