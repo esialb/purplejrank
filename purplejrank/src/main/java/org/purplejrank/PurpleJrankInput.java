@@ -408,9 +408,6 @@ public class PurpleJrankInput extends ObjectInputStream implements ObjectInput {
 					readSerializableObject(d, obj);
 				}
 
-				setBlockMode(false).ensureAvailable(1);
-				if(buf.get() != J_WALL)
-					throw new StreamCorruptedException();
 
 				Method m = findReadResolve(obj);
 				if(m != null) {
@@ -457,6 +454,9 @@ public class PurpleJrankInput extends ObjectInputStream implements ObjectInput {
 		} finally {
 			context.pollLast();
 		}
+		setBlockMode(false).ensureAvailable(1);
+		if(buf.get() != J_WALL)
+			throw new StreamCorruptedException();
 	}
 	
 	protected void readSerializableObject(JrankClass desc, Object obj)
@@ -476,7 +476,7 @@ public class PurpleJrankInput extends ObjectInputStream implements ObjectInput {
 					m = methodCache.declared(t.getType(), "readObject", ObjectInputStream.class);
 				if(obj == null || t.getType() == null || !t.getType().isInstance(obj))
 					;
-				else if((t.getFlags() & J_SC_WRITE_OBJECT) == J_SC_WRITE_OBJECT) {
+				else if((t.getFlags() & J_SC_WRITE_OBJECT) == J_SC_WRITE_OBJECT || m != null) {
 					restoredClasses.add(t.getType());
 					try {
 						if(m != null)
@@ -606,6 +606,10 @@ public class PurpleJrankInput extends ObjectInputStream implements ObjectInput {
 			String name = readUTF(false);
 			long serialVersion = readEscapedLong();
 			byte flags = ensureAvailable(1).get();
+
+			d = new JrankClass();
+			wired.add(d);
+			
 			short nfields = ensureAvailable(2).getShort();
 			String[] fieldNames = new String[nfields];
 			String[] fieldTypes = new String[nfields];
@@ -614,11 +618,8 @@ public class PurpleJrankInput extends ObjectInputStream implements ObjectInput {
 				fieldTypes[i] = Character.toString(t);
 				fieldNames[i] = readUTF(false);
 				if(t == '[' || t == 'L')
-					fieldTypes[i] += readUTF(false);
+					fieldTypes[i] += ((String) readObject0(true)).substring(1);
 			}
-
-			d = new JrankClass();
-			wired.add(d);
 
 			d.setProxy(false);
 			d.setName(name);

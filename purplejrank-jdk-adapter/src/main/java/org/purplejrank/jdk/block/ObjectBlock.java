@@ -140,6 +140,7 @@ public class ObjectBlock extends JdkBlock implements ObjectRule, WiredBlock {
 			} else if((flags & ObjectStreamConstants.SC_EXTERNALIZABLE) == ObjectStreamConstants.SC_EXTERNALIZABLE) {
 				for(ContentRule c : objectAnnotation)
 					c.writeJrank(out);
+				out.write(JrankConstants.J_WALL);
 			}
 			
 		}
@@ -165,8 +166,7 @@ public class ObjectBlock extends JdkBlock implements ObjectRule, WiredBlock {
 			classdata.add(new Classdata(jdk, (ClassdescBlock) cr).parse());
 		} else if((flags & ObjectStreamConstants.SC_SERIALIZABLE) == ObjectStreamConstants.SC_SERIALIZABLE) {
 			List<ClassdescBlock> cbl = new ArrayList<ClassdescBlock>();
-			if(cr instanceof ClassdescBlock)
-				cbl.add(0, (ClassdescBlock) cr);
+			cbl.add(0, (ClassdescBlock) cr);
 			ClassdescBlock cb = cr.getSuperClassDesc();
 			while(cb != null) {
 				cbl.add(0, cb);
@@ -185,7 +185,6 @@ public class ObjectBlock extends JdkBlock implements ObjectRule, WiredBlock {
 		classDesc.writeJrank(out);
 		for(Classdata c : classdata)
 			c.writeJrank(out);
-		out.write(JrankConstants.J_WALL);
 	}
 
 }

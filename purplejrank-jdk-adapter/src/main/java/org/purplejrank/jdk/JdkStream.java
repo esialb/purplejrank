@@ -156,18 +156,18 @@ public class JdkStream extends DataInputStream {
 
 	public static void writeEscapedInt(OutputStream out, int v) throws IOException {
 		if((v & 0x7f) != v) {
-			out.write((byte)(0x80 | (0x7f & v)));
+			out.write((0x80 | (0x7f & v)));
 			writeEscapedInt(out, v >>> 7);
 		} else
-			out.write((byte)v);
+			out.write(v);
 	}
 
 	public static void writeEscapedLong(OutputStream out, long v) throws IOException {
 		if((v & 0x7f) != v) {
-			out.write((byte)(0x80 | (0x7f & v)));
+			out.write((int)(0x80 | (0x7f & v)));
 			writeEscapedLong(out, v >>> 7);
 		} else
-			out.write((byte)v);
+			out.write((int)v);
 	}
 
 	

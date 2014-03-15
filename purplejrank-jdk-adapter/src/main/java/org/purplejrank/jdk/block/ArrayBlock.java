@@ -42,8 +42,9 @@ public class ArrayBlock extends JdkBlock implements ObjectRule, WiredBlock {
 		case 'L': case '[': objValues = new ArrayList<ObjectRule>(); break;
 		}
 		
-		if(primValues != null)
+		if(primValues != null) {
 			jdk.readFully(primValues);
+		}
 		if(objValues != null)
 			for(int i = 0; i < size; i++)
 				objValues.add(jdk.readBlock(ObjectRule.class));
@@ -56,9 +57,9 @@ public class ArrayBlock extends JdkBlock implements ObjectRule, WiredBlock {
 		out.write(JrankConstants.J_ARRAY);
 		classDesc.writeJrank(out);
 		JdkStream.writeEscapedInt(out, size);
-		if(primValues != null)
+		if(primValues != null) {
 			out.write(primValues);
-		else
+		} else
 			for(ObjectRule o : objValues)
 				o.writeJrank(out);
 	}

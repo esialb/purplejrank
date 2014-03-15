@@ -128,6 +128,9 @@ public class ClassdescBlock extends JdkBlock implements ObjectRule, Newclassdesc
 	@Override
 	public void writeJrank(DataOutputStream out) throws IOException {
 		out.write(JrankConstants.J_CLASSDESC);
+		String className = this.className;
+		if(!className.startsWith("["))
+			className = "L" + className + ";";
 		JdkStream.writeUTF(out, className);
 		JdkStream.writeEscapedLong(out, serialVersionUID);
 		out.write(classDescFlags);

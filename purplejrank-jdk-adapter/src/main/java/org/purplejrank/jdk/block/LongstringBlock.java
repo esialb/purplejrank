@@ -33,4 +33,9 @@ public class LongstringBlock extends JdkBlock implements ObjectRule, StringRule,
 		JdkStream.writeUTF(out, s);
 	}
 
+	@Override
+	public String getString() {
+		return s;
+	}
+
 }

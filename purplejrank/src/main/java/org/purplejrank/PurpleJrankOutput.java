@@ -266,6 +266,7 @@ public class PurpleJrankOutput extends ObjectOutputStream implements ObjectOutpu
 			context.offerLast(new JrankContext(d, obj));
 			((Externalizable) obj).writeExternal(this);
 			context.pollLast();
+			setBlockMode(false).ensureCapacity(1).put(J_WALL);
 		} else {
 			List<JrankClass> rc = new ArrayList<JrankClass>();
 			for(JrankClass t = d; t != null; t = t.getParent()) {
@@ -289,7 +290,6 @@ public class PurpleJrankOutput extends ObjectOutputStream implements ObjectOutpu
 				context.pollLast();
 			}
 		}
-		setBlockMode(false).ensureCapacity(1).put(J_WALL);
 		
 	}
 	
@@ -326,7 +326,7 @@ public class PurpleJrankOutput extends ObjectOutputStream implements ObjectOutpu
 				ensureCapacity(1).put((byte) d.getFieldTypes()[i].charAt(0));
 				writeUTF(d.getFieldNames()[i], false);
 				if(d.getFieldTypes()[i].length() > 1)
-					writeUTF(d.getFieldTypes()[i].substring(1), false);
+					writeObject0(d.getFieldTypes()[i], true);
 			}
 		}
 		

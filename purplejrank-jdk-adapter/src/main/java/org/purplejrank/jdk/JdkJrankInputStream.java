@@ -4,6 +4,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Arrays;
 
 import org.purplejrank.io.PullInputStream;
 import org.purplejrank.jdk.block.HeaderBlock;
@@ -20,6 +21,7 @@ public class JdkJrankInputStream extends PullInputStream {
 		super(in);
 		jdk = new JdkStream(in);
 		pull(new HeaderBlock(jdk));
+		pull();
 	}
 
 	protected void pull(Block b) throws IOException {
@@ -33,9 +35,11 @@ public class JdkJrankInputStream extends PullInputStream {
 	protected int pull() throws IOException {
 		if(pos == bbuf.length)
 			pull(jdk.readBlock(ContentRule.class));
+		buf.clear();
 		int r = Math.min(buf.remaining(), bbuf.length - pos);
 		buf.put(bbuf, pos, r);
 		pos += r;
+		buf.flip();
 		return r;
 	}
 

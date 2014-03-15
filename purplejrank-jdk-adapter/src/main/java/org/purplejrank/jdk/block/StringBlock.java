@@ -33,4 +33,9 @@ public class StringBlock extends JdkBlock implements ObjectRule, StringRule, Wir
 		JdkStream.writeUTF(out, s);
 	}
 
+	@Override
+	public String getString() {
+		return s;
+	}
+
 }

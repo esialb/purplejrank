@@ -48,4 +48,9 @@ public class ReferenceBlock extends JdkBlock implements ObjectRule, ClassdescRul
 		JdkStream.writeEscapedInt(out, handle - ObjectStreamConstants.baseWireHandle);
 	}
 
+	@Override
+	public String getString() {
+		return ((StringRule) getWired()).getString();
+	}
+
 }
