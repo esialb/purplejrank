@@ -6,16 +6,29 @@ import java.nio.ByteBuffer;
 
 import org.purplejrank.JrankConstants;
 
+/**
+ * Buffered {@link InputStream} that uses a "pull" mechanism so that
+ * the data can be loaded as needed.
+ * @author robin
+ *
+ */
 public abstract class PullInputStream extends InputStream {
-
+	/**
+	 * Data buffer, loaded by the pull() methoid
+	 */
 	protected ByteBuffer buf = ByteBuffer.allocateDirect(JrankConstants.J_MAX_BLOCK_SIZE);
-	protected InputStream in;
 	
-	
-	public PullInputStream(InputStream in) {
-		this.in = in;
+	/**
+	 * Abstract constructor for a new {@link PullInputStream}
+	 */
+	public PullInputStream() {
 	}
 	
+	/**
+	 * Pull data into {@link #buf} so it can be read
+	 * @return
+	 * @throws IOException
+	 */
 	protected abstract int pull() throws IOException;
 	
 	@Override

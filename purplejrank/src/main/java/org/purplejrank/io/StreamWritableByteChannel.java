@@ -12,10 +12,23 @@ import java.nio.channels.WritableByteChannel;
  *
  */
 public class StreamWritableByteChannel implements WritableByteChannel, Flushable {
+	/**
+	 * The backing {@link OutputStream}
+	 */
 	private OutputStream out;
+	/**
+	 * Whether this {@link WritableByteChannel} is open
+	 */
 	private boolean open = true;
+	/**
+	 * Write buffer
+	 */
 	private byte[] buf = new byte[8192];
 	
+	/**
+	 * Adapt an {@link OutputStream} to a {@link WritableByteChannel}
+	 * @param out
+	 */
 	public StreamWritableByteChannel(OutputStream out) {
 		this.out = out;
 	}

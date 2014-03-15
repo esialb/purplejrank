@@ -16,7 +16,6 @@ public class JdkJrankInputStream extends PullInputStream {
 	protected int pos;
 	
 	public JdkJrankInputStream(InputStream in) throws IOException {
-		super(in);
 		jdk = new JdkStream(in);
 		pull(new HeaderBlock(jdk));
 		pull();
