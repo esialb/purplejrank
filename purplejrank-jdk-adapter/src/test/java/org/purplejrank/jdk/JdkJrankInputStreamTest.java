@@ -3,6 +3,7 @@ package org.purplejrank.jdk;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
 import java.util.Vector;
 
@@ -20,7 +21,8 @@ public class JdkJrankInputStreamTest {
 		List<Object> test = Arrays.<Object>asList(
 				Calendar.getInstance(),
 				1,
-				new Vector<Object>(Arrays.<Object>asList(1,"two", 3.))
+				new Vector<Object>(Arrays.<Object>asList(1,"two", 3.)),
+				new Date()
 				);
 		List<Object[]> params = new ArrayList<Object[]>();
 		for(Object t : test) 
