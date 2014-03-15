@@ -137,14 +137,14 @@ public class PurpleJrankInput extends ObjectInputStream implements ObjectInput {
 					continue;
 				}
 				// then try to read the next block
-				blockHeader.clear();
-				in.read(blockHeader);
-				blockHeader.flip();
-				if(blockHeader.get() != J_BLOCK_DATA)
+				ByteBuffer b = ByteBuffer.allocateDirect(1);
+				in.read(b);
+				b.flip();
+				if(b.get() != J_BLOCK_DATA)
 					throw new StreamCorruptedException("Not at block boundary");
-				int blockSize = readEscapedInt(blockHeader);
+				int blockSize = readChannelEscapedInt();
 				buf.clear().limit(Math.min(blockSize, buf.capacity()));
-				buf.put(blockHeader);
+//				buf.put(blockHeader);
 				in.read(buf);
 				buf.flip();
 				unbufferedBlock = blockSize - buf.limit();
@@ -185,6 +185,24 @@ public class PurpleJrankInput extends ObjectInputStream implements ObjectInput {
 		return v;
 	}
 
+	protected int readChannelEscapedInt() throws IOException {
+		return readChannelEscapedInt(0);
+	}
+	
+	private int readChannelEscapedInt(int shift) throws IOException {
+		ByteBuffer b = ByteBuffer.allocateDirect(1);
+		in.read(b);
+		b.flip();
+		int v = 0xff & b.get();
+		boolean more = (v & 0x80) != 0;
+		v &= 0x7f;
+		v <<= shift;
+		if(more) {
+			v |= readChannelEscapedInt(shift + 7);
+		}
+		return v;
+	}
+	
 	protected long readEscapedLong() throws IOException {
 		return readEscapedLong(0);
 	}
@@ -444,7 +462,11 @@ public class PurpleJrankInput extends ObjectInputStream implements ObjectInput {
 	protected void readSerializableObject(JrankClass desc, Object obj)
 	throws IOException, ClassNotFoundException {
 		Set<Class<?>> restoredClasses = new HashSet<Class<?>>();
+		List<JrankClass> rc = new ArrayList<JrankClass>();
 		for(JrankClass t = desc; t != null; t = t.getParent()) {
+			rc.add(0, t);
+		}
+		for(JrankClass t : rc) {
 			context.offerLast(new JrankContext(t, obj));
 			try {
 				Method m = null;
@@ -846,3 +868,4 @@ public class PurpleJrankInput extends ObjectInputStream implements ObjectInput {
 
 
 }
+ 

@@ -16,9 +16,11 @@ import java.lang.reflect.Method;
 import java.nio.ByteBuffer;
 import java.nio.channels.WritableByteChannel;
 import java.util.ArrayDeque;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Deque;
 import java.util.IdentityHashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.purplejrank.io.StreamWritableByteChannel;
@@ -265,7 +267,11 @@ public class PurpleJrankOutput extends ObjectOutputStream implements ObjectOutpu
 			((Externalizable) obj).writeExternal(this);
 			context.pollLast();
 		} else {
+			List<JrankClass> rc = new ArrayList<JrankClass>();
 			for(JrankClass t = d; t != null; t = t.getParent()) {
+				rc.add(0, t);
+			}
+			for(JrankClass t : rc) {
 				if((t.getFlags() & J_SC_SERIALIZABLE) == 0)
 					continue;
 				context.offerLast(new JrankContext(t, obj));
