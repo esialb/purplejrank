@@ -11,5 +11,6 @@ public class JdkJrankInputStreamTest {
 		JdkJrankInputStream jjis = Util.jjis(Calendar.getInstance());
 		PurpleJrankInput in = new PurpleJrankInput(jjis);
 		in.readObject();
+		in.close();
 	}
 }

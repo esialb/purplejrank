@@ -3,7 +3,6 @@ package org.purplejrank.jdk.block;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.ObjectStreamConstants;
-import java.io.OutputStream;
 import java.io.StreamCorruptedException;
 
 import org.purplejrank.JrankConstants;
