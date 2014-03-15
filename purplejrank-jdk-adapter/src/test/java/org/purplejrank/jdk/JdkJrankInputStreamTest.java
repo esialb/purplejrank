@@ -4,7 +4,6 @@ import java.util.Calendar;
 
 import org.junit.Assert;
 import org.junit.Test;
-import org.purplejrank.PurpleJrankInput;
 
 public class JdkJrankInputStreamTest {
 	@Test
