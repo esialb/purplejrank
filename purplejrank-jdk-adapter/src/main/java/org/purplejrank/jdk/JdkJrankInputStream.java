@@ -8,14 +8,14 @@ import org.purplejrank.io.PullInputStream;
 import org.purplejrank.jdk.block.HeaderBlock;
 import org.purplejrank.jdk.rule.ContentRule;
 
-public class JdkInputStream extends PullInputStream {
+public class JdkJrankInputStream extends PullInputStream {
 
 	protected ByteArrayOutputStream bout = new ByteArrayOutputStream();
 	protected JdkStream jdk;
 	protected byte[] bbuf;
 	protected int pos;
 	
-	public JdkInputStream(InputStream in) throws IOException {
+	public JdkJrankInputStream(InputStream in) throws IOException {
 		super(in);
 		jdk = new JdkStream(in);
 		pull(new HeaderBlock(jdk));
