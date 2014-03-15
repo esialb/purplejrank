@@ -2,6 +2,11 @@ package org.purplejrank;
 
 import java.io.ObjectStreamException;
 
+/**
+ * Generic object stream exception for Jrank exceptions
+ * @author robin
+ *
+ */
 public class JrankStreamException extends ObjectStreamException {
 	private static final long serialVersionUID = 0;
 
