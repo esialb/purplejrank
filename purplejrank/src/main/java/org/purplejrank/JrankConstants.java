@@ -20,7 +20,7 @@ public class JrankConstants {
 	/**
 	 * Stream version
 	 */
-	public static final int J_VERSION = 2;
+	public static final int J_VERSION = 3;
 	
 	/**
 	 * Token for a null
