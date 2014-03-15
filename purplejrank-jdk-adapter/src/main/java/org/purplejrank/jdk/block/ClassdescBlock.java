@@ -2,6 +2,7 @@ package org.purplejrank.jdk.block;
 
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.ObjectStreamConstants;
 import java.io.StreamCorruptedException;
 import java.util.ArrayList;
 import java.util.List;
@@ -132,7 +133,20 @@ public class ClassdescBlock extends JdkBlock implements ObjectRule, Newclassdesc
 			className = "L" + className + ";";
 		JdkStream.writeUTF(out, className);
 		JdkStream.writeEscapedLong(out, serialVersionUID);
-		out.write(classDescFlags);
+		byte jrflags = 0;
+		byte osflags = classDescFlags;
+		if((osflags & ObjectStreamConstants.SC_SERIALIZABLE) != 0) {
+			jrflags |= JrankConstants.J_SC_SERIALIZABLE;
+			if((osflags & ObjectStreamConstants.SC_WRITE_METHOD) != 0)
+				jrflags |= JrankConstants.J_SC_WRITE_OBJECT;
+			else
+				jrflags |= JrankConstants.J_SC_WRITE_FIELDS;
+		}
+		if((osflags & ObjectStreamConstants.SC_EXTERNALIZABLE) != 0)
+			jrflags |= JrankConstants.J_SC_WRITE_EXTERNAL;
+		if((osflags & ObjectStreamConstants.SC_ENUM) != 0)
+			jrflags |= JrankConstants.J_SC_WRITE_ENUM;
+		out.write(jrflags);
 		out.writeShort(fields.size());
 		for(Field f : fields)
 			f.writeJrank(out);
