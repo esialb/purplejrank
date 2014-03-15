@@ -6,6 +6,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.StreamCorruptedException;
 import java.io.UTFDataFormatException;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.purplejrank.jdk.block.ArrayBlock;
 import org.purplejrank.jdk.block.BlockdataBlock;
@@ -28,11 +30,22 @@ import static java.io.ObjectStreamConstants.*;
 
 public class JdkStream extends DataInputStream {
 
+	protected List<WiredBlock> wiredBlocks = new ArrayList<WiredBlock>();
+	
 	public JdkStream(InputStream in) throws IOException {
 		super(in);
 		new HeaderBlock(this).parse();
 	}
+	
+	public int wireBlock(WiredBlock ref) {
+		wiredBlocks.add(ref);
+		return baseWireHandle + wiredBlocks.size() - 1;
+	}
 
+	public List<WiredBlock> getWiredBlocks() {
+		return wiredBlocks;
+	}
+	
 	public Block readBlock() throws IOException {
 		int t = read();
 		switch(t) {

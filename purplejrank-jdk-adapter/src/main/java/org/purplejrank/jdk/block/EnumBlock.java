@@ -5,9 +5,10 @@ import java.io.IOException;
 import org.purplejrank.jdk.Block;
 import org.purplejrank.jdk.JdkBlock;
 import org.purplejrank.jdk.JdkStream;
+import org.purplejrank.jdk.WiredBlock;
 import org.purplejrank.jdk.rule.ObjectRule;
 
-public class EnumBlock extends JdkBlock implements ObjectRule {
+public class EnumBlock extends JdkBlock implements ObjectRule, WiredBlock {
 
 	public EnumBlock(JdkStream jdk) {
 		super(jdk);

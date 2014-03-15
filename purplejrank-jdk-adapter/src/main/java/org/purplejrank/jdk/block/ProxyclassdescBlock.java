@@ -5,10 +5,11 @@ import java.io.IOException;
 import org.purplejrank.jdk.Block;
 import org.purplejrank.jdk.JdkBlock;
 import org.purplejrank.jdk.JdkStream;
+import org.purplejrank.jdk.WiredBlock;
 import org.purplejrank.jdk.rule.NewclassdescRule;
 import org.purplejrank.jdk.rule.ObjectRule;
 
-public class ProxyclassdescBlock extends JdkBlock implements ObjectRule, NewclassdescRule {
+public class ProxyclassdescBlock extends JdkBlock implements ObjectRule, NewclassdescRule, WiredBlock {
 
 	public ProxyclassdescBlock(JdkStream jdk) {
 		super(jdk);
