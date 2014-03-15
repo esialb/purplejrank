@@ -4,6 +4,7 @@ import java.io.DataInputStream;
 import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.StreamCorruptedException;
 import java.io.UTFDataFormatException;
 import java.util.ArrayList;
@@ -151,6 +152,25 @@ public class JdkStream extends DataInputStream {
 		}
 		// The number of chars produced may be less than utflen
 		return new String(chararr, 0, chararr_count);
+	}
+
+	public static void writeEscapedInt(OutputStream out, int v) throws IOException {
+		if((v & 0x7f) != v) {
+			out.write((byte)(0x80 | (0x7f & v)));
+			writeEscapedInt(out, v >>> 7);
+		} else
+			out.write((byte)v);
+	}
+
+	public static void writeUTF(OutputStream out, String s) throws IOException {
+		// Instead of the JRE's modified UTF-8, write bit-8-escaped ints
+		for(int i = 0; i < s.length(); i++) {
+			int c = s.charAt(i);
+			if(c == 0)
+				c = 0x1ffff;
+			writeEscapedInt(out, c);
+		}
+		writeEscapedInt(out, 0);
 	}
 
 }

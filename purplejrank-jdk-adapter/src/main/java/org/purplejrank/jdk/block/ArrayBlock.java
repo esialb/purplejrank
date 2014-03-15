@@ -5,6 +5,7 @@ import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.purplejrank.JrankConstants;
 import org.purplejrank.jdk.Block;
 import org.purplejrank.jdk.JdkBlock;
 import org.purplejrank.jdk.JdkStream;
@@ -15,6 +16,7 @@ import org.purplejrank.jdk.rule.ObjectRule;
 public class ArrayBlock extends JdkBlock implements ObjectRule, WiredBlock {
 
 	protected ClassdescRule classDesc;
+	protected int size;
 	protected byte[] primValues;
 	protected List<ObjectRule> objValues;
 	
@@ -26,7 +28,7 @@ public class ArrayBlock extends JdkBlock implements ObjectRule, WiredBlock {
 	public Block parse() throws IOException {
 		classDesc = jdk.readBlock(ClassdescRule.class);
 		jdk.wireBlock(this);
-		int size = jdk.readInt();
+		size = jdk.readInt();
 		switch(classDesc.getClassName().charAt(1)) {
 		case 'B': primValues = new byte[size]; break;
 		case 'C': primValues = new byte[size * 2]; break;
@@ -50,8 +52,14 @@ public class ArrayBlock extends JdkBlock implements ObjectRule, WiredBlock {
 
 	@Override
 	public void writeJrank(OutputStream out) throws IOException {
-		// TODO Auto-generated method stub
-		
+		out.write(JrankConstants.J_ARRAY);
+		classDesc.writeJrank(out);
+		JdkStream.writeEscapedInt(out, size);
+		if(primValues != null)
+			out.write(primValues);
+		else
+			for(ObjectRule o : objValues)
+				o.writeJrank(out);
 	}
 
 }

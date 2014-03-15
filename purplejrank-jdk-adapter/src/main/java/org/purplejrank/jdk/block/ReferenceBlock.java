@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.ObjectStreamConstants;
 import java.io.OutputStream;
 
+import org.purplejrank.JrankConstants;
 import org.purplejrank.jdk.Block;
 import org.purplejrank.jdk.JdkBlock;
 import org.purplejrank.jdk.JdkStream;
@@ -28,8 +29,8 @@ public class ReferenceBlock extends JdkBlock implements ObjectRule, ClassdescRul
 
 	@Override
 	public void writeJrank(OutputStream out) throws IOException {
-		// TODO Auto-generated method stub
-		
+		out.write(JrankConstants.J_REFERENCE);
+		JdkStream.writeEscapedInt(out, handle - ObjectStreamConstants.baseWireHandle);
 	}
 	
 	public WiredBlock getWired() {

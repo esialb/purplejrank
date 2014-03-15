@@ -3,6 +3,7 @@ package org.purplejrank.jdk.block;
 import java.io.IOException;
 import java.io.OutputStream;
 
+import org.purplejrank.JrankConstants;
 import org.purplejrank.jdk.Block;
 import org.purplejrank.jdk.JdkBlock;
 import org.purplejrank.jdk.JdkStream;
@@ -27,8 +28,8 @@ public class StringBlock extends JdkBlock implements ObjectRule, StringRule, Wir
 
 	@Override
 	public void writeJrank(OutputStream out) throws IOException {
-		// TODO Auto-generated method stub
-		
+		out.write(JrankConstants.J_STRING);
+		JdkStream.writeUTF(out, s);
 	}
 
 }
