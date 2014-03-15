@@ -6,6 +6,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectOutputStream;
 
+import org.purplejrank.PurpleJrankInput;
+
 public class Util {
 	public static JdkStream stream(Object... objs) throws IOException {
 		return new JdkStream(input(objs));
@@ -24,6 +26,15 @@ public class Util {
 	
 	public static JdkJrankInputStream jjis(Object... objs) throws IOException {
 		return new JdkJrankInputStream(input(objs));
+	}
+	
+	public static Object cycle(Object obj) throws IOException, ClassNotFoundException {
+		PurpleJrankInput in = new PurpleJrankInput(jjis(obj));
+		try {
+			return in.readObject();
+		} finally {
+			in.close();
+		}
 	}
 	
 	private Util() {}
