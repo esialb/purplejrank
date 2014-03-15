@@ -355,8 +355,9 @@ public class PurpleJrankOutput extends ObjectOutputStream implements ObjectOutpu
 			int r = Math.min(buf.remaining(), off + len - pos);
 			buf.put(b, pos, r);
 			pos += r;
-			if(pos < off + len)
+			if(pos < off + len) {
 				dump();
+			}
 		}
 	}
 

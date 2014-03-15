@@ -78,7 +78,7 @@ public class PurpleJrankInput extends ObjectInputStream implements ObjectInput {
 		int magic = buf.getInt();
 		int version = buf.getInt();
 		if(magic != J_MAGIC)
-			throw new JrankStreamException("invalid magic");
+			throw new JrankStreamException("invalid magic:" + Integer.toHexString(magic));
 		if(version != J_VERSION)
 			throw new JrankStreamException("invalid version");
 	}
@@ -130,10 +130,10 @@ public class PurpleJrankInput extends ObjectInputStream implements ObjectInput {
 			while(buf.remaining() < available) {
 				// first try to read unbuffered block data
 				if(unbufferedBlock > 0) {
-					buf.compact().limit(Math.min(unbufferedBlock, buf.remaining()));
-					in.read(buf);
-					buf.position(0);
-					unbufferedBlock -= buf.limit();
+					buf.compact().limit(Math.min(unbufferedBlock, buf.capacity()));
+					int r = in.read(buf);
+					buf.flip();
+					unbufferedBlock -= r;
 					continue;
 				}
 				// then try to read the next block
@@ -715,7 +715,7 @@ public class PurpleJrankInput extends ObjectInputStream implements ObjectInput {
 		setBlockMode(true);
 		int count = 0;
 		while(count < len) {
-			int r = Math.min(len, buf.capacity());
+			int r = Math.min(len - count, buf.capacity());
 			ensureAvailable(r);
 			buf.get(b, off + count, r);
 			count += r;
