@@ -30,6 +30,11 @@ import org.purplejrank.jdk.rule.ContentRule;
 
 import static java.io.ObjectStreamConstants.*;
 
+/**
+ * Parser for JDK object streams
+ * @author robin
+ *
+ */
 public class JdkStream extends DataInputStream {
 
 	protected List<WiredBlock> wiredBlocks = new ArrayList<WiredBlock>();
@@ -39,6 +44,10 @@ public class JdkStream extends DataInputStream {
 		new HeaderBlock(this).parse();
 	}
 	
+	/**
+	 * Skip through the stream, verifying its form
+	 * @throws IOException
+	 */
 	public void verify() throws IOException {
 		try {
 			while(true)
@@ -47,6 +56,11 @@ public class JdkStream extends DataInputStream {
 		}
 	}
 	
+	/**
+	 * Make a backreference available for a {@link Block}
+	 * @param ref
+	 * @return
+	 */
 	public int wireBlock(WiredBlock ref) {
 		wiredBlocks.add(ref);
 		return baseWireHandle + wiredBlocks.size() - 1;
@@ -56,6 +70,13 @@ public class JdkStream extends DataInputStream {
 		return wiredBlocks;
 	}
 	
+	/**
+	 * Read a {@link Block} of a specified type, throwing {@link StreamCorruptedException}
+	 * if the block isn't of that type
+	 * @param type
+	 * @return
+	 * @throws IOException
+	 */
 	public <T extends Block> T readBlock(Class<T> type) throws IOException {
 		Block b = readBlock();
 		if(type.isInstance(b))
@@ -63,6 +84,11 @@ public class JdkStream extends DataInputStream {
 		throw new StreamCorruptedException("Unexpected block:" + b);
 	}
 	
+	/**
+	 * Read any block
+	 * @return
+	 * @throws IOException
+	 */
 	public Block readBlock() throws IOException {
 		int t = read();
 		switch(t) {
@@ -88,6 +114,11 @@ public class JdkStream extends DataInputStream {
 		}
 	}
 
+	/**
+	 * Read a "longstring" format UTF string
+	 * @return
+	 * @throws IOException
+	 */
 	public String readLongUTF() throws IOException {
 		int utflen = (int) readLong();
 		byte[] bytearr = null;
@@ -154,6 +185,12 @@ public class JdkStream extends DataInputStream {
 		return new String(chararr, 0, chararr_count);
 	}
 
+	/**
+	 * Write an escaped int
+	 * @param out
+	 * @param v
+	 * @throws IOException
+	 */
 	public static void writeEscapedInt(OutputStream out, int v) throws IOException {
 		if((v & 0x7f) != v) {
 			out.write((0x80 | (0x7f & v)));
@@ -162,6 +199,12 @@ public class JdkStream extends DataInputStream {
 			out.write(v);
 	}
 
+	/**
+	 * Write an escaped long
+	 * @param out
+	 * @param v
+	 * @throws IOException
+	 */
 	public static void writeEscapedLong(OutputStream out, long v) throws IOException {
 		if((v & 0x7f) != v) {
 			out.write((int)(0x80 | (0x7f & v)));
@@ -170,7 +213,12 @@ public class JdkStream extends DataInputStream {
 			out.write((int)v);
 	}
 
-	
+	/**
+	 * Write a Jrank format string
+	 * @param out
+	 * @param s
+	 * @throws IOException
+	 */
 	public static void writeUTF(OutputStream out, String s) throws IOException {
 		// Instead of the JRE's modified UTF-8, write bit-8-escaped ints
 		for(int i = 0; i < s.length(); i++) {

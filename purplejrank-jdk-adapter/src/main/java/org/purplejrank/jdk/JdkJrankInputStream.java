@@ -8,6 +8,11 @@ import org.purplejrank.io.PullInputStream;
 import org.purplejrank.jdk.block.HeaderBlock;
 import org.purplejrank.jdk.rule.ContentRule;
 
+/**
+ * {@link InputStream} that converts a JDK object stream to a Jrank object stream
+ * @author robin
+ *
+ */
 public class JdkJrankInputStream extends PullInputStream {
 
 	protected ByteArrayOutputStream bout = new ByteArrayOutputStream();
@@ -21,6 +26,11 @@ public class JdkJrankInputStream extends PullInputStream {
 		pull();
 	}
 
+	/**
+	 * Buffer a {@link Block}
+	 * @param b
+	 * @throws IOException
+	 */
 	protected void pull(Block b) throws IOException {
 		bout.reset();
 		b.writeJrank(new DataOutputStream(bout));
