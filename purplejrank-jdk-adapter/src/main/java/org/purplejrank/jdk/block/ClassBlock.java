@@ -7,19 +7,22 @@ import org.purplejrank.jdk.Block;
 import org.purplejrank.jdk.JdkBlock;
 import org.purplejrank.jdk.JdkStream;
 import org.purplejrank.jdk.WiredBlock;
+import org.purplejrank.jdk.rule.ClassdescRule;
 import org.purplejrank.jdk.rule.ObjectRule;
 
 public class ClassBlock extends JdkBlock implements ObjectRule, WiredBlock {
 
+	protected ClassdescRule classDesc;
+	
 	public ClassBlock(JdkStream jdk) {
 		super(jdk);
-		// TODO Auto-generated constructor stub
 	}
 
 	@Override
 	public Block parse() throws IOException {
-		// TODO Auto-generated method stub
-		return null;
+		classDesc = jdk.readBlock(ClassdescRule.class);
+		jdk.wireBlock(this);
+		return this;
 	}
 
 	@Override

@@ -46,6 +46,13 @@ public class JdkStream extends DataInputStream {
 		return wiredBlocks;
 	}
 	
+	public <T extends Block> T readBlock(Class<T> type) throws IOException {
+		Block b = readBlock();
+		if(type.isInstance(b))
+			return type.cast(b);
+		throw new StreamCorruptedException("Unexpected block:" + b);
+	}
+	
 	public Block readBlock() throws IOException {
 		int t = read();
 		switch(t) {

@@ -12,14 +12,17 @@ import org.purplejrank.jdk.rule.StringRule;
 
 public class LongstringBlock extends JdkBlock implements ObjectRule, StringRule, WiredBlock {
 
+	protected String s;
+	
 	public LongstringBlock(JdkStream jdk) {
 		super(jdk);
 	}
 
 	@Override
 	public Block parse() throws IOException {
-		// TODO Auto-generated method stub
-		return null;
+		jdk.wireBlock(this);
+		s = jdk.readLongUTF();
+		return this;
 	}
 
 	@Override

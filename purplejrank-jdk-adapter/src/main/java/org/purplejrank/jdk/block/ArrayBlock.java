@@ -13,7 +13,6 @@ public class ArrayBlock extends JdkBlock implements ObjectRule, WiredBlock {
 
 	public ArrayBlock(JdkStream jdk) {
 		super(jdk);
-		// TODO Auto-generated constructor stub
 	}
 
 	@Override

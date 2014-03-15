@@ -10,14 +10,18 @@ import org.purplejrank.jdk.rule.BlockdataRule;
 
 public class BlockdataBlock extends JdkBlock implements BlockdataRule {
 
+	protected byte[] buf;
+	
 	public BlockdataBlock(JdkStream jdk) {
 		super(jdk);
 	}
 
 	@Override
-	public Block parse() throws IOException {
-		// TODO Auto-generated method stub
-		return null;
+	public BlockdataBlock parse() throws IOException {
+		int size = 0xff & (int) jdk.readByte();
+		buf = new byte[size];
+		jdk.readFully(buf);;
+		return this;
 	}
 
 	@Override
