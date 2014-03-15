@@ -28,7 +28,7 @@ public class ArrayBlock extends JdkBlock implements ObjectRule, WiredBlock {
 		classDesc = jdk.readBlock(ClassdescRule.class);
 		jdk.wireBlock(this);
 		int size = jdk.readInt();
-		switch(classDesc.getClassName().charAt(0)) {
+		switch(classDesc.getClassName().charAt(1)) {
 		case 'B': primValues = new byte[size]; break;
 		case 'C': primValues = new byte[size * 2]; break;
 		case 'D': primValues = new byte[size * 8]; break;

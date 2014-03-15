@@ -25,6 +25,7 @@ import org.purplejrank.jdk.block.ProxyclassdescBlock;
 import org.purplejrank.jdk.block.ReferenceBlock;
 import org.purplejrank.jdk.block.ResetBlock;
 import org.purplejrank.jdk.block.StringBlock;
+import org.purplejrank.jdk.rule.ContentRule;
 
 import static java.io.ObjectStreamConstants.*;
 
@@ -35,6 +36,14 @@ public class JdkStream extends DataInputStream {
 	public JdkStream(InputStream in) throws IOException {
 		super(in);
 		new HeaderBlock(this).parse();
+	}
+	
+	public void verify() throws IOException {
+		try {
+			while(true)
+				readBlock(ContentRule.class);
+		} catch(EOFException e) {
+		}
 	}
 	
 	public int wireBlock(WiredBlock ref) {
