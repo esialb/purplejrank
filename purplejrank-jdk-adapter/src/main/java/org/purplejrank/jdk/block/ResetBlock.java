@@ -18,8 +18,7 @@ public class ResetBlock extends JdkBlock implements ObjectRule {
 
 	@Override
 	public Block parse() throws IOException {
-		// TODO Auto-generated method stub
-		return null;
+		return this;
 	}
 
 	@Override

@@ -66,8 +66,10 @@ public class ClassdescBlock extends JdkBlock implements ObjectRule, Newclassdesc
 
 		@Override
 		public void writeJrank(DataOutputStream out) throws IOException {
-			// TODO Auto-generated method stub
-			
+			out.writeByte(typeCode);
+			JdkStream.writeUTF(out, fieldName);
+			if(className != null)
+				className.writeJrank(out);
 		}
 		
 	}
