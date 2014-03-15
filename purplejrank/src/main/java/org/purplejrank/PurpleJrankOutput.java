@@ -16,9 +16,11 @@ import java.lang.reflect.Method;
 import java.nio.ByteBuffer;
 import java.nio.channels.WritableByteChannel;
 import java.util.ArrayDeque;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Deque;
 import java.util.IdentityHashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.purplejrank.io.StreamWritableByteChannel;
@@ -264,8 +266,13 @@ public class PurpleJrankOutput extends ObjectOutputStream implements ObjectOutpu
 			context.offerLast(new JrankContext(d, obj));
 			((Externalizable) obj).writeExternal(this);
 			context.pollLast();
+			setBlockMode(false).ensureCapacity(1).put(J_WALL);
 		} else {
+			List<JrankClass> rc = new ArrayList<JrankClass>();
 			for(JrankClass t = d; t != null; t = t.getParent()) {
+				rc.add(0, t);
+			}
+			for(JrankClass t : rc) {
 				if((t.getFlags() & J_SC_SERIALIZABLE) == 0)
 					continue;
 				context.offerLast(new JrankContext(t, obj));
@@ -283,7 +290,6 @@ public class PurpleJrankOutput extends ObjectOutputStream implements ObjectOutpu
 				context.pollLast();
 			}
 		}
-		setBlockMode(false).ensureCapacity(1).put(J_WALL);
 		
 	}
 	
@@ -320,7 +326,7 @@ public class PurpleJrankOutput extends ObjectOutputStream implements ObjectOutpu
 				ensureCapacity(1).put((byte) d.getFieldTypes()[i].charAt(0));
 				writeUTF(d.getFieldNames()[i], false);
 				if(d.getFieldTypes()[i].length() > 1)
-					writeUTF(d.getFieldTypes()[i].substring(1), false);
+					writeObject0(d.getFieldTypes()[i], true);
 			}
 		}
 		
@@ -355,8 +361,9 @@ public class PurpleJrankOutput extends ObjectOutputStream implements ObjectOutpu
 			int r = Math.min(buf.remaining(), off + len - pos);
 			buf.put(b, pos, r);
 			pos += r;
-			if(pos < off + len)
+			if(pos < off + len) {
 				dump();
+			}
 		}
 	}
 

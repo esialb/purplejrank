@@ -3,6 +3,7 @@ package org.purplejrank;
 import java.io.Externalizable;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InvalidClassException;
 import java.io.InvalidObjectException;
 import java.io.NotActiveException;
 import java.io.ObjectInput;
@@ -77,7 +78,7 @@ public class PurpleJrankInput extends ObjectInputStream implements ObjectInput {
 		int magic = buf.getInt();
 		int version = buf.getInt();
 		if(magic != J_MAGIC)
-			throw new JrankStreamException("invalid magic");
+			throw new JrankStreamException("invalid magic:" + Integer.toHexString(magic));
 		if(version != J_VERSION)
 			throw new JrankStreamException("invalid version");
 	}
@@ -129,21 +130,21 @@ public class PurpleJrankInput extends ObjectInputStream implements ObjectInput {
 			while(buf.remaining() < available) {
 				// first try to read unbuffered block data
 				if(unbufferedBlock > 0) {
-					buf.compact().limit(Math.min(unbufferedBlock, buf.remaining()));
-					in.read(buf);
-					buf.position(0);
-					unbufferedBlock -= buf.limit();
+					buf.compact().limit(Math.min(unbufferedBlock, buf.capacity()));
+					int r = in.read(buf);
+					buf.flip();
+					unbufferedBlock -= r;
 					continue;
 				}
 				// then try to read the next block
-				blockHeader.clear();
-				in.read(blockHeader);
-				blockHeader.flip();
-				if(blockHeader.get() != J_BLOCK_DATA)
+				ByteBuffer b = ByteBuffer.allocateDirect(1);
+				in.read(b);
+				b.flip();
+				if(b.get() != J_BLOCK_DATA)
 					throw new StreamCorruptedException("Not at block boundary");
-				int blockSize = readEscapedInt(blockHeader);
+				int blockSize = readChannelEscapedInt();
 				buf.clear().limit(Math.min(blockSize, buf.capacity()));
-				buf.put(blockHeader);
+//				buf.put(blockHeader);
 				in.read(buf);
 				buf.flip();
 				unbufferedBlock = blockSize - buf.limit();
@@ -184,6 +185,24 @@ public class PurpleJrankInput extends ObjectInputStream implements ObjectInput {
 		return v;
 	}
 
+	protected int readChannelEscapedInt() throws IOException {
+		return readChannelEscapedInt(0);
+	}
+	
+	private int readChannelEscapedInt(int shift) throws IOException {
+		ByteBuffer b = ByteBuffer.allocateDirect(1);
+		in.read(b);
+		b.flip();
+		int v = 0xff & b.get();
+		boolean more = (v & 0x80) != 0;
+		v &= 0x7f;
+		v <<= shift;
+		if(more) {
+			v |= readChannelEscapedInt(shift + 7);
+		}
+		return v;
+	}
+	
 	protected long readEscapedLong() throws IOException {
 		return readEscapedLong(0);
 	}
@@ -309,149 +328,191 @@ public class PurpleJrankInput extends ObjectInputStream implements ObjectInput {
 	protected Object readObject0(boolean shared) throws IOException, ClassNotFoundException {
 		ensureOpen().setBlockMode(false);
 
-		Object obj = null;
-		int handle = -1;
+		context.offerLast(JrankContext.NO_CONTEXT);
+		try {
 
-		byte b;
-		switch(b = ensureAvailable(1).get()) {
-		case J_NULL:
-			return null;
+			Object obj = null;
+			int handle = -1;
 
-		case J_REFERENCE:
-			handle = readEscapedInt();
-			if(shared)
-				return wired.get(handle);
-			obj = clone(wired.get(handle));
-			break;
+			byte b;
+			switch(b = ensureAvailable(1).get()) {
+			case J_NULL:
+				return null;
 
-		case J_ARRAY:
-			JrankClass d = readClassDesc();
-			int size = setBlockMode(false).readEscapedInt();
-			Class<?> cmp = null;
-			if(d.getType() != null)
-				cmp = d.getType().getComponentType();
-			obj = newArray(d, size);
-			wired.add(obj);
-			context.offerLast(new JrankContext(d, obj));
-			for(int i = 0; i < size; i++) {
-				Object v;
+			case J_REFERENCE:
+				handle = readEscapedInt();
+				if(shared)
+					return wired.get(handle);
+				obj = clone(wired.get(handle));
+				break;
 
-				if(cmp == byte.class) v = ensureAvailable(1).get();
-				else if(cmp == char.class) v = ensureAvailable(2).getChar();
-				else if(cmp == double.class) v = ensureAvailable(8).getDouble();
-				else if(cmp == float.class) v = ensureAvailable(4).getFloat();
-				else if(cmp == int.class) v = ensureAvailable(4).getInt();
-				else if(cmp == long.class) v = ensureAvailable(8).getLong();
-				else if(cmp == short.class) v = ensureAvailable(2).getShort();
-				else if(cmp == boolean.class) v = ensureAvailable(1).get() != 0;
-				else v = readObject0(true);
-
-				setArrayElement(obj, i, v);
-
-				setBlockMode(false);
-			}
-			context.pollLast();
-			break;
-
-		case J_STRING:
-			obj = readUTF(false);
-			wired.add(obj);
-			break;
-
-		case J_ENUM:
-			d = readClassDesc();
-			String name = (String) readObject0(true);
-			obj = Enum.valueOf(d.getType().asSubclass(Enum.class), name);
-			wired.add(obj);
-			break;
-
-		case J_CLASS:
-			d = readClassDesc();
-			obj = resolveClass(d);
-			wired.add(obj);
-			break;
-			
-		case J_OBJECT:
-			d = readClassDesc();
-			obj = newOrdinaryObject(d);
-			handle = wired.size();
-			wired.add(obj);
-
-			if((d.getFlags() & J_SC_WRITE_EXTERNAL) == J_SC_WRITE_EXTERNAL) {
+			case J_ARRAY:
+				JrankClass d = readClassDesc();
+				int size = setBlockMode(false).readEscapedInt();
+				Class<?> cmp = null;
+				if(d.getType() != null)
+					cmp = d.getType().getComponentType();
+				obj = newArray(d, size);
+				wired.add(obj);
 				context.offerLast(new JrankContext(d, obj));
-				if(obj != null)
-					((Externalizable) obj).readExternal(this);
-				skipOptionalData();
-				context.pollLast();
-			} else {
-				Set<Class<?>> restoredClasses = new HashSet<Class<?>>();
-				for(JrankClass t = d; t != null; t = t.getParent()) {
-					context.offerLast(new JrankContext(t, obj));
-					Method m = null;
-					if(
-							t.getType() != null 
-							&& (t.getFlags() & J_SC_WRITE_OBJECT) == J_SC_WRITE_OBJECT)
-						m = methodCache.declared(t.getType(), "readObject", ObjectInputStream.class);
-					if(obj == null || t.getType() == null || !t.getType().isInstance(obj))
-						;
-					else if((t.getFlags() & J_SC_WRITE_OBJECT) == J_SC_WRITE_OBJECT) {
-						restoredClasses.add(t.getType());
-						try {
-							if(m != null)
-								m.invoke(obj, this);
-							else
-								defaultReadObject();
-						} catch(Exception ex) {
-							throw new JrankStreamException(ex);
-						}
-					} else {
-						restoredClasses.add(t.getType());
-						defaultReadObject();
+				try {
+					for(int i = 0; i < size; i++) {
+						Object v;
+
+						if(cmp == byte.class) v = ensureAvailable(1).get();
+						else if(cmp == char.class) v = ensureAvailable(2).getChar();
+						else if(cmp == double.class) v = ensureAvailable(8).getDouble();
+						else if(cmp == float.class) v = ensureAvailable(4).getFloat();
+						else if(cmp == int.class) v = ensureAvailable(4).getInt();
+						else if(cmp == long.class) v = ensureAvailable(8).getLong();
+						else if(cmp == short.class) v = ensureAvailable(2).getShort();
+						else if(cmp == boolean.class) v = ensureAvailable(1).get() != 0;
+						else v = readObject0(true);
+
+						setArrayElement(obj, i, v);
+
+						setBlockMode(false);
 					}
-					skipOptionalData();
-					setBlockMode(false).ensureAvailable(1);
-					if(buf.get() != J_WALL)
-						throw new StreamCorruptedException();
+				} finally {
 					context.pollLast();
 				}
-				Class<?> unrestored = obj != null ? obj.getClass() : null;
-				while(unrestored != null && Serializable.class.isAssignableFrom(unrestored)) {
-					if(!restoredClasses.contains(unrestored)) {
-						Method m = methodCache.declared(unrestored, "readObjectNoData");
-						try {
-							if(m != null)
-								m.invoke(obj);
-						} catch(Exception ex) {
-							throw new JrankStreamException(ex);
-						}
+				break;
+
+			case J_STRING:
+				obj = readUTF(false);
+				wired.add(obj);
+				break;
+
+			case J_ENUM:
+				d = readClassDesc();
+				String name = (String) readObject0(true);
+				obj = Enum.valueOf(d.getType().asSubclass(Enum.class), name);
+				wired.add(obj);
+				break;
+
+			case J_CLASS:
+				d = readClassDesc();
+				obj = resolveClass(d);
+				wired.add(obj);
+				break;
+
+			case J_OBJECT:
+				d = readClassDesc();
+				obj = newOrdinaryObject(d);
+				handle = wired.size();
+				wired.add(obj);
+
+				if((d.getFlags() & J_SC_WRITE_EXTERNAL) == J_SC_WRITE_EXTERNAL) {
+					readExternalizableObject(d, obj);
+				} else {
+					readSerializableObject(d, obj);
+				}
+
+
+				Method m = findReadResolve(obj);
+				if(m != null) {
+					try {
+						obj = m.invoke(obj);
+						wired.set(handle, obj);
+					} catch(Exception e) {
+						throw new JrankStreamException(e);
 					}
-					unrestored = unrestored.getSuperclass();
 				}
-			}
-			
-			setBlockMode(false).ensureAvailable(1);
-			if(buf.get() != J_WALL)
-				throw new StreamCorruptedException();
 
-			Method m = findReadResolve(obj);
-			if(m != null) {
-				try {
-					obj = m.invoke(obj);
-					wired.set(handle, obj);
-				} catch(Exception e) {
-					throw new JrankStreamException(e);
-				}
+				break;
+
+			default:
+				throw new StreamCorruptedException(Byte.toString(b));
 			}
 
-			break;
-
-		default:
-			throw new StreamCorruptedException(Byte.toString(b));
+			return obj;
+		} finally {
+			context.pollLast();
 		}
-
-		return obj;
 	}
 
+	protected void readExternalizableObject(JrankClass desc, Object obj)
+	throws IOException, ClassNotFoundException  {
+		context.offerLast(JrankContext.NO_CONTEXT); // context not available for Externalizable
+		try {
+			if(obj != null) {
+				if(obj instanceof Externalizable)
+					((Externalizable) obj).readExternal(this);
+				else {
+					Method m = methodCache.find(obj.getClass(), "readExternal", ObjectInput.class);
+					if(m != null) {
+						try {
+							m.invoke(obj, this);
+						} catch(Exception e) {
+							throw new JrankStreamException(e);
+						}
+					} else
+						throw new InvalidClassException(desc.getName(), "serialized as Externalizable but resolved to non-Externalizable with no readExternal");
+				}
+			}
+			skipOptionalData();
+		} finally {
+			context.pollLast();
+		}
+		setBlockMode(false).ensureAvailable(1);
+		if(buf.get() != J_WALL)
+			throw new StreamCorruptedException();
+	}
+	
+	protected void readSerializableObject(JrankClass desc, Object obj)
+	throws IOException, ClassNotFoundException {
+		Set<Class<?>> restoredClasses = new HashSet<Class<?>>();
+		List<JrankClass> rc = new ArrayList<JrankClass>();
+		for(JrankClass t = desc; t != null; t = t.getParent()) {
+			rc.add(0, t);
+		}
+		for(JrankClass t : rc) {
+			context.offerLast(new JrankContext(t, obj));
+			try {
+				Method m = null;
+				if(
+						t.getType() != null 
+						&& (t.getFlags() & J_SC_WRITE_OBJECT) == J_SC_WRITE_OBJECT)
+					m = methodCache.declared(t.getType(), "readObject", ObjectInputStream.class);
+				if(obj == null || t.getType() == null || !t.getType().isInstance(obj))
+					;
+				else if((t.getFlags() & J_SC_WRITE_OBJECT) == J_SC_WRITE_OBJECT || m != null) {
+					restoredClasses.add(t.getType());
+					try {
+						if(m != null)
+							m.invoke(obj, this);
+						else
+							defaultReadObject();
+					} catch(Exception ex) {
+						throw new JrankStreamException(ex);
+					}
+				} else {
+					restoredClasses.add(t.getType());
+					defaultReadObject();
+				}
+				skipOptionalData();
+				setBlockMode(false).ensureAvailable(1);
+				if(buf.get() != J_WALL)
+					throw new StreamCorruptedException();
+			} finally {
+				context.pollLast();
+			}
+		}
+		Class<?> unrestored = obj != null ? obj.getClass() : null;
+		while(unrestored != null && Serializable.class.isAssignableFrom(unrestored)) {
+			if(!restoredClasses.contains(unrestored)) {
+				Method m = methodCache.declared(unrestored, "readObjectNoData");
+				try {
+					if(m != null)
+						m.invoke(obj);
+				} catch(Exception ex) {
+					throw new JrankStreamException(ex);
+				}
+			}
+			unrestored = unrestored.getSuperclass();
+		}
+	}
+	
 	protected Object newArray(JrankClass desc, int size) {
 		Class<?> cmp;
 		if(desc.getType() != null) {
@@ -545,6 +606,10 @@ public class PurpleJrankInput extends ObjectInputStream implements ObjectInput {
 			String name = readUTF(false);
 			long serialVersion = readEscapedLong();
 			byte flags = ensureAvailable(1).get();
+
+			d = new JrankClass();
+			wired.add(d);
+			
 			short nfields = ensureAvailable(2).getShort();
 			String[] fieldNames = new String[nfields];
 			String[] fieldTypes = new String[nfields];
@@ -553,11 +618,8 @@ public class PurpleJrankInput extends ObjectInputStream implements ObjectInput {
 				fieldTypes[i] = Character.toString(t);
 				fieldNames[i] = readUTF(false);
 				if(t == '[' || t == 'L')
-					fieldTypes[i] += readUTF(false);
+					fieldTypes[i] += ((String) readObject0(true)).substring(1);
 			}
-
-			d = new JrankClass();
-			wired.add(d);
 
 			d.setProxy(false);
 			d.setName(name);
@@ -676,7 +738,7 @@ public class PurpleJrankInput extends ObjectInputStream implements ObjectInput {
 		setBlockMode(true);
 		int count = 0;
 		while(count < len) {
-			int r = Math.min(len, buf.capacity());
+			int r = Math.min(len - count, buf.capacity());
 			ensureAvailable(r);
 			buf.get(b, off + count, r);
 			count += r;
@@ -807,3 +869,4 @@ public class PurpleJrankInput extends ObjectInputStream implements ObjectInput {
 
 
 }
+ 
