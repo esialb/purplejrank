@@ -44,4 +44,18 @@ public class ProxyclassdescBlock extends JdkBlock implements ObjectRule, Newclas
 		
 	}
 
+	@Override
+	public String getClassName() {
+		return null;
+	}
+
+	@Override
+	public ClassdescBlock getSuperClassDesc() {
+		if(superClassDesc instanceof ReferenceBlock)
+			return (ClassdescBlock) ((ReferenceBlock) superClassDesc).getWired();
+		if(superClassDesc instanceof NullBlock)
+			return null;
+		return (ClassdescBlock) superClassDesc;
+	}
+
 }

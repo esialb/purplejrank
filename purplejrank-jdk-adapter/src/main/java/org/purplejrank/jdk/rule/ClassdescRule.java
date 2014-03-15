@@ -1,5 +1,8 @@
 package org.purplejrank.jdk.rule;
 
-public interface ClassdescRule extends SuperclassdescRule {
+import org.purplejrank.jdk.block.ClassdescBlock;
 
+public interface ClassdescRule extends SuperclassdescRule {
+	public String getClassName();
+	public ClassdescBlock getSuperClassDesc();
 }

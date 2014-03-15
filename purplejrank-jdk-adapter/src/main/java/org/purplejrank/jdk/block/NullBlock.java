@@ -8,6 +8,7 @@ import org.purplejrank.jdk.JdkBlock;
 import org.purplejrank.jdk.JdkStream;
 import org.purplejrank.jdk.rule.ClassdescRule;
 import org.purplejrank.jdk.rule.ObjectRule;
+import org.purplejrank.jdk.rule.SuperclassdescRule;
 
 public class NullBlock extends JdkBlock implements ObjectRule, ClassdescRule {
 
@@ -24,6 +25,16 @@ public class NullBlock extends JdkBlock implements ObjectRule, ClassdescRule {
 	public void writeJrank(OutputStream out) throws IOException {
 		// TODO Auto-generated method stub
 		
+	}
+
+	@Override
+	public String getClassName() {
+		return null;
+	}
+
+	@Override
+	public ClassdescBlock getSuperClassDesc() {
+		return null;
 	}
 
 }

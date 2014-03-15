@@ -15,8 +15,7 @@ public class EndblockdataBlock extends JdkBlock {
 
 	@Override
 	public Block parse() throws IOException {
-		// TODO Auto-generated method stub
-		return null;
+		return this;
 	}
 
 	@Override

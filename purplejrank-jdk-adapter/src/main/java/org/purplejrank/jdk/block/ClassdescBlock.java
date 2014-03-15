@@ -55,6 +55,18 @@ public class ClassdescBlock extends JdkBlock implements ObjectRule, Newclassdesc
 			// TODO Auto-generated method stub
 			
 		}
+
+		public byte getTypeCode() {
+			return typeCode;
+		}
+
+		public String getFieldName() {
+			return fieldName;
+		}
+
+		public StringRule getClassName() {
+			return className;
+		}
 		
 	}
 	
@@ -83,6 +95,36 @@ public class ClassdescBlock extends JdkBlock implements ObjectRule, Newclassdesc
 	public void writeJrank(OutputStream out) throws IOException {
 		// TODO Auto-generated method stub
 		
+	}
+
+	@Override
+	public String getClassName() {
+		return className;
+	}
+
+	@Override
+	public ClassdescBlock getSuperClassDesc() {
+		if(superClassDesc instanceof ReferenceBlock)
+			return (ClassdescBlock) ((ReferenceBlock) superClassDesc).getWired();
+		if(superClassDesc instanceof NullBlock)
+			return null;
+		return (ClassdescBlock) superClassDesc;
+	}
+
+	public long getSerialVersionUID() {
+		return serialVersionUID;
+	}
+
+	public byte getClassDescFlags() {
+		return classDescFlags;
+	}
+
+	public List<Field> getFields() {
+		return fields;
+	}
+
+	public List<ContentRule> getClassAnnotation() {
+		return classAnnotation;
 	}
 
 }
