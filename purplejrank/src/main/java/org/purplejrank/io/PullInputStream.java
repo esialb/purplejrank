@@ -35,7 +35,7 @@ public abstract class PullInputStream extends InputStream {
 		while(rem > 0) {
 			b[off++] = buf.get();
 			rem--;
-			if(!buf.hasRemaining())
+			if(rem > 0 && !buf.hasRemaining())
 				if(pull() < 1)
 					return len - rem;
 		}
