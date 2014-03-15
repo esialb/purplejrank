@@ -78,7 +78,7 @@ public class PurpleJrankInput extends ObjectInputStream implements ObjectInput {
 		int magic = buf.getInt();
 		int version = buf.getInt();
 		if(magic != J_MAGIC)
-			throw new JrankStreamException("invalid magic");
+			throw new JrankStreamException("invalid magic:" + Integer.toHexString(magic));
 		if(version != J_VERSION)
 			throw new JrankStreamException("invalid version");
 	}
@@ -130,21 +130,21 @@ public class PurpleJrankInput extends ObjectInputStream implements ObjectInput {
 			while(buf.remaining() < available) {
 				// first try to read unbuffered block data
 				if(unbufferedBlock > 0) {
-					buf.compact().limit(Math.min(unbufferedBlock, buf.remaining()));
-					in.read(buf);
-					buf.position(0);
-					unbufferedBlock -= buf.limit();
+					buf.compact().limit(Math.min(unbufferedBlock, buf.capacity()));
+					int r = in.read(buf);
+					buf.flip();
+					unbufferedBlock -= r;
 					continue;
 				}
 				// then try to read the next block
-				blockHeader.clear();
-				in.read(blockHeader);
-				blockHeader.flip();
-				if(blockHeader.get() != J_BLOCK_DATA)
+				ByteBuffer b = ByteBuffer.allocateDirect(1);
+				in.read(b);
+				b.flip();
+				if(b.get() != J_BLOCK_DATA)
 					throw new StreamCorruptedException("Not at block boundary");
-				int blockSize = readEscapedInt(blockHeader);
+				int blockSize = readChannelEscapedInt();
 				buf.clear().limit(Math.min(blockSize, buf.capacity()));
-				buf.put(blockHeader);
+//				buf.put(blockHeader);
 				in.read(buf);
 				buf.flip();
 				unbufferedBlock = blockSize - buf.limit();
@@ -185,6 +185,24 @@ public class PurpleJrankInput extends ObjectInputStream implements ObjectInput {
 		return v;
 	}
 
+	protected int readChannelEscapedInt() throws IOException {
+		return readChannelEscapedInt(0);
+	}
+	
+	private int readChannelEscapedInt(int shift) throws IOException {
+		ByteBuffer b = ByteBuffer.allocateDirect(1);
+		in.read(b);
+		b.flip();
+		int v = 0xff & b.get();
+		boolean more = (v & 0x80) != 0;
+		v &= 0x7f;
+		v <<= shift;
+		if(more) {
+			v |= readChannelEscapedInt(shift + 7);
+		}
+		return v;
+	}
+	
 	protected long readEscapedLong() throws IOException {
 		return readEscapedLong(0);
 	}
@@ -390,9 +408,6 @@ public class PurpleJrankInput extends ObjectInputStream implements ObjectInput {
 					readSerializableObject(d, obj);
 				}
 
-				setBlockMode(false).ensureAvailable(1);
-				if(buf.get() != J_WALL)
-					throw new StreamCorruptedException();
 
 				Method m = findReadResolve(obj);
 				if(m != null) {
@@ -439,12 +454,19 @@ public class PurpleJrankInput extends ObjectInputStream implements ObjectInput {
 		} finally {
 			context.pollLast();
 		}
+		setBlockMode(false).ensureAvailable(1);
+		if(buf.get() != J_WALL)
+			throw new StreamCorruptedException();
 	}
 	
 	protected void readSerializableObject(JrankClass desc, Object obj)
 	throws IOException, ClassNotFoundException {
 		Set<Class<?>> restoredClasses = new HashSet<Class<?>>();
+		List<JrankClass> rc = new ArrayList<JrankClass>();
 		for(JrankClass t = desc; t != null; t = t.getParent()) {
+			rc.add(0, t);
+		}
+		for(JrankClass t : rc) {
 			context.offerLast(new JrankContext(t, obj));
 			try {
 				Method m = null;
@@ -454,7 +476,7 @@ public class PurpleJrankInput extends ObjectInputStream implements ObjectInput {
 					m = methodCache.declared(t.getType(), "readObject", ObjectInputStream.class);
 				if(obj == null || t.getType() == null || !t.getType().isInstance(obj))
 					;
-				else if((t.getFlags() & J_SC_WRITE_OBJECT) == J_SC_WRITE_OBJECT) {
+				else if((t.getFlags() & J_SC_WRITE_OBJECT) == J_SC_WRITE_OBJECT || m != null) {
 					restoredClasses.add(t.getType());
 					try {
 						if(m != null)
@@ -584,6 +606,10 @@ public class PurpleJrankInput extends ObjectInputStream implements ObjectInput {
 			String name = readUTF(false);
 			long serialVersion = readEscapedLong();
 			byte flags = ensureAvailable(1).get();
+
+			d = new JrankClass();
+			wired.add(d);
+			
 			short nfields = ensureAvailable(2).getShort();
 			String[] fieldNames = new String[nfields];
 			String[] fieldTypes = new String[nfields];
@@ -592,11 +618,8 @@ public class PurpleJrankInput extends ObjectInputStream implements ObjectInput {
 				fieldTypes[i] = Character.toString(t);
 				fieldNames[i] = readUTF(false);
 				if(t == '[' || t == 'L')
-					fieldTypes[i] += readUTF(false);
+					fieldTypes[i] += ((String) readObject0(true)).substring(1);
 			}
-
-			d = new JrankClass();
-			wired.add(d);
 
 			d.setProxy(false);
 			d.setName(name);
@@ -715,7 +738,7 @@ public class PurpleJrankInput extends ObjectInputStream implements ObjectInput {
 		setBlockMode(true);
 		int count = 0;
 		while(count < len) {
-			int r = Math.min(len, buf.capacity());
+			int r = Math.min(len - count, buf.capacity());
 			ensureAvailable(r);
 			buf.get(b, off + count, r);
 			count += r;
@@ -846,3 +869,4 @@ public class PurpleJrankInput extends ObjectInputStream implements ObjectInput {
 
 
 }
+ 

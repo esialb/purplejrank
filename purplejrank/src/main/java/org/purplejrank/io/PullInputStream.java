@@ -1,18 +1,19 @@
 package org.purplejrank.io;
 
-import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
 
 import org.purplejrank.JrankConstants;
 
-public abstract class PullInputStream extends FilterInputStream {
+public abstract class PullInputStream extends InputStream {
 
 	protected ByteBuffer buf = ByteBuffer.allocateDirect(JrankConstants.J_MAX_BLOCK_SIZE);
+	protected InputStream in;
 	
-	protected PullInputStream(InputStream in) {
-		super(in);
+	
+	public PullInputStream(InputStream in) {
+		this.in = in;
 	}
 	
 	protected abstract int pull() throws IOException;
@@ -34,7 +35,7 @@ public abstract class PullInputStream extends FilterInputStream {
 		while(rem > 0) {
 			b[off++] = buf.get();
 			rem--;
-			if(!buf.hasRemaining())
+			if(rem > 0 && !buf.hasRemaining())
 				if(pull() < 1)
 					return len - rem;
 		}

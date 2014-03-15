@@ -3,10 +3,11 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>org.purplejrank</groupId>
 	<artifactId>purplejrank-parent</artifactId>
-	<version>1.0.1-SNAPSHOT</version>
+	<version>1.1-SNAPSHOT</version>
 	<packaging>pom</packaging>
 	<modules>
 		<module>../purplejrank</module>
+		<module>../purplejrank-jdk-adapter</module>
 	</modules>
 
 	<parent>
