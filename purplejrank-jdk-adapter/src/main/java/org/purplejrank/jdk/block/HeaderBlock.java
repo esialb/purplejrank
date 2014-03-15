@@ -2,6 +2,7 @@ package org.purplejrank.jdk.block;
 
 import java.io.IOException;
 import java.io.ObjectStreamConstants;
+import java.io.OutputStream;
 import java.io.StreamCorruptedException;
 
 import org.purplejrank.jdk.Block;
@@ -21,6 +22,12 @@ public class HeaderBlock extends JdkBlock {
 		if(jdk.readShort() != ObjectStreamConstants.STREAM_VERSION)
 			throw new StreamCorruptedException();
 		return this;
+	}
+
+	@Override
+	public void writeJrank(OutputStream out) throws IOException {
+		// TODO Auto-generated method stub
+		
 	}
 
 }

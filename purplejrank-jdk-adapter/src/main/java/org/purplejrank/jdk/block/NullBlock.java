@@ -1,6 +1,7 @@
 package org.purplejrank.jdk.block;
 
 import java.io.IOException;
+import java.io.OutputStream;
 
 import org.purplejrank.jdk.Block;
 import org.purplejrank.jdk.JdkBlock;
@@ -17,6 +18,12 @@ public class NullBlock extends JdkBlock implements ObjectRule, ClassdescRule {
 	@Override
 	public Block parse() throws IOException {
 		return this;
+	}
+
+	@Override
+	public void writeJrank(OutputStream out) throws IOException {
+		// TODO Auto-generated method stub
+		
 	}
 
 }
