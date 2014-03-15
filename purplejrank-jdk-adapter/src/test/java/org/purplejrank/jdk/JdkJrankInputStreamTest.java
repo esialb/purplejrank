@@ -15,6 +15,10 @@ import org.junit.runners.Parameterized.Parameters;
 
 @RunWith(Parameterized.class)
 public class JdkJrankInputStreamTest {
+	public static enum E {
+		FOO,
+		BAR,
+	}
 	
 	@Parameters
 	public static Iterable<Object[]> params() {
@@ -22,7 +26,8 @@ public class JdkJrankInputStreamTest {
 				Calendar.getInstance(),
 				1,
 				new Vector<Object>(Arrays.<Object>asList(1,"two", 3.)),
-				new Date()
+				new Date(),
+				Arrays.<Object>asList("foo", E.BAR)
 				);
 		List<Object[]> params = new ArrayList<Object[]>();
 		for(Object t : test) 
