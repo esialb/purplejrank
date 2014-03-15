@@ -1,10 +1,12 @@
 package org.purplejrank.jdk.block;
 
+import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.purplejrank.JrankConstants;
 import org.purplejrank.jdk.Block;
 import org.purplejrank.jdk.JdkBlock;
 import org.purplejrank.jdk.JdkStream;
@@ -39,12 +41,6 @@ public class ProxyclassdescBlock extends JdkBlock implements ObjectRule, Newclas
 	}
 
 	@Override
-	public void writeJrank(OutputStream out) throws IOException {
-		// TODO Auto-generated method stub
-		
-	}
-
-	@Override
 	public String getClassName() {
 		return null;
 	}
@@ -56,6 +52,15 @@ public class ProxyclassdescBlock extends JdkBlock implements ObjectRule, Newclas
 		if(superClassDesc instanceof NullBlock)
 			return null;
 		return (ClassdescBlock) superClassDesc;
+	}
+
+	@Override
+	public void writeJrank(DataOutputStream out) throws IOException {
+		out.write(JrankConstants.J_PROXYCLASSDESC);
+		JdkStream.writeEscapedInt(out, proxyInterfaceNames.size());
+		for(String ifc : proxyInterfaceNames)
+			JdkStream.writeUTF(out, ifc);
+		superClassDesc.writeJrank(out);
 	}
 
 }

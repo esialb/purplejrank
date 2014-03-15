@@ -1,11 +1,13 @@
 package org.purplejrank.jdk.block;
 
+import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.ObjectStreamConstants;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.purplejrank.JrankConstants;
 import org.purplejrank.jdk.Block;
 import org.purplejrank.jdk.JdkBlock;
 import org.purplejrank.jdk.JdkStream;
@@ -50,9 +52,46 @@ public class ObjectBlock extends JdkBlock implements ObjectRule, WiredBlock {
 			}
 
 			@Override
-			public void writeJrank(OutputStream out) throws IOException {
-				// TODO Auto-generated method stub
-				
+			public void writeJrank(DataOutputStream out) throws IOException {
+				if(primValue != null)
+					out.write(JrankConstants.J_BLOCK_DATA);
+				switch(field.getTypeCode()) {
+				case 'B':
+					JdkStream.writeEscapedInt(out, 1);
+					out.writeByte((Byte) primValue); 
+					break;
+				case 'C':
+					JdkStream.writeEscapedInt(out, 2);
+					out.writeChar((Character) primValue);
+					break;
+				case 'D':
+					JdkStream.writeEscapedInt(out, 8);
+					out.writeDouble((Double) primValue);
+					break;
+				case 'F':
+					JdkStream.writeEscapedInt(out, 4);
+					out.writeFloat((Float) primValue);
+					break;
+				case 'I':
+					JdkStream.writeEscapedInt(out, 4);
+					out.writeInt((Integer) primValue);
+					break;
+				case 'J':
+					JdkStream.writeEscapedInt(out, 8);
+					out.writeLong((Long) primValue);
+					break;
+				case 'S':
+					JdkStream.writeEscapedInt(out, 2);
+					out.writeShort((Short) primValue);
+					break;
+				case 'Z':
+					JdkStream.writeEscapedInt(out, 1);
+					out.writeBoolean((Boolean) primValue);
+					break;
+				case 'L': case '[':
+					objValue.writeJrank(out);
+					break;
+				}
 			}
 			
 		}
@@ -68,9 +107,11 @@ public class ObjectBlock extends JdkBlock implements ObjectRule, WiredBlock {
 
 		@Override
 		public Classdata parse() throws IOException {
-			for(Field f : classDesc.getFields())
-				values.add(new FieldValue(jdk, f).parse());
 			byte flags = classDesc.getClassDescFlags();
+			if((flags & ObjectStreamConstants.SC_EXTERNALIZABLE) == 0) {
+				for(Field f : classDesc.getFields())
+					values.add(new FieldValue(jdk, f).parse());
+			}
 			if(
 					(flags & ObjectStreamConstants.SC_SERIALIZABLE) == ObjectStreamConstants.SC_SERIALIZABLE
 					&& (flags & ObjectStreamConstants.SC_WRITE_METHOD) == 0)
@@ -83,8 +124,23 @@ public class ObjectBlock extends JdkBlock implements ObjectRule, WiredBlock {
 		}
 
 		@Override
-		public void writeJrank(OutputStream out) throws IOException {
-			// TODO Auto-generated method stub
+		public void writeJrank(DataOutputStream out) throws IOException {
+			byte flags = classDesc.getClassDescFlags();
+			if((flags & ObjectStreamConstants.SC_SERIALIZABLE) == ObjectStreamConstants.SC_SERIALIZABLE) {
+				out.write(JrankConstants.J_FIELDS);
+				for(FieldValue fv : values) {
+					fv.writeJrank(out);
+				}
+				out.write(JrankConstants.J_WALL);
+				if((flags & ObjectStreamConstants.SC_WRITE_METHOD) == ObjectStreamConstants.SC_WRITE_METHOD) {
+					for(ContentRule c : objectAnnotation)
+						c.writeJrank(out);
+				}
+				out.write(JrankConstants.J_WALL);
+			} else if((flags & ObjectStreamConstants.SC_EXTERNALIZABLE) == ObjectStreamConstants.SC_EXTERNALIZABLE) {
+				for(ContentRule c : objectAnnotation)
+					c.writeJrank(out);
+			}
 			
 		}
 		
@@ -124,9 +180,12 @@ public class ObjectBlock extends JdkBlock implements ObjectRule, WiredBlock {
 	}
 
 	@Override
-	public void writeJrank(OutputStream out) throws IOException {
-		// TODO Auto-generated method stub
-		
+	public void writeJrank(DataOutputStream out) throws IOException {
+		out.write(JrankConstants.J_OBJECT);
+		classDesc.writeJrank(out);
+		for(Classdata c : classdata)
+			c.writeJrank(out);
+		out.write(JrankConstants.J_WALL);
 	}
 
 }

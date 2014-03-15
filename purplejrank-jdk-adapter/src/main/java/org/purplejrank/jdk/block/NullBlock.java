@@ -1,5 +1,6 @@
 package org.purplejrank.jdk.block;
 
+import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 
@@ -22,11 +23,6 @@ public class NullBlock extends JdkBlock implements ObjectRule, ClassdescRule {
 	}
 
 	@Override
-	public void writeJrank(OutputStream out) throws IOException {
-		out.write(JrankConstants.J_NULL);
-	}
-
-	@Override
 	public String getClassName() {
 		return null;
 	}
@@ -34,6 +30,11 @@ public class NullBlock extends JdkBlock implements ObjectRule, ClassdescRule {
 	@Override
 	public ClassdescBlock getSuperClassDesc() {
 		return null;
+	}
+
+	@Override
+	public void writeJrank(DataOutputStream out) throws IOException {
+		out.write(JrankConstants.J_NULL);
 	}
 
 }

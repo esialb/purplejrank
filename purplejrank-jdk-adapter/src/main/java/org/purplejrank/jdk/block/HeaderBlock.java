@@ -1,10 +1,12 @@
 package org.purplejrank.jdk.block;
 
+import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.ObjectStreamConstants;
 import java.io.OutputStream;
 import java.io.StreamCorruptedException;
 
+import org.purplejrank.JrankConstants;
 import org.purplejrank.jdk.Block;
 import org.purplejrank.jdk.JdkBlock;
 import org.purplejrank.jdk.JdkStream;
@@ -25,9 +27,9 @@ public class HeaderBlock extends JdkBlock {
 	}
 
 	@Override
-	public void writeJrank(OutputStream out) throws IOException {
-		// TODO Auto-generated method stub
-		
+	public void writeJrank(DataOutputStream out) throws IOException {
+		out.writeInt(JrankConstants.J_MAGIC);
+		out.writeInt(JrankConstants.J_VERSION);
 	}
 
 }

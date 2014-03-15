@@ -162,6 +162,15 @@ public class JdkStream extends DataInputStream {
 			out.write((byte)v);
 	}
 
+	public static void writeEscapedLong(OutputStream out, long v) throws IOException {
+		if((v & 0x7f) != v) {
+			out.write((byte)(0x80 | (0x7f & v)));
+			writeEscapedLong(out, v >>> 7);
+		} else
+			out.write((byte)v);
+	}
+
+	
 	public static void writeUTF(OutputStream out, String s) throws IOException {
 		// Instead of the JRE's modified UTF-8, write bit-8-escaped ints
 		for(int i = 0; i < s.length(); i++) {

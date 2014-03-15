@@ -1,5 +1,6 @@
 package org.purplejrank.jdk.block;
 
+import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.ArrayList;
@@ -51,7 +52,7 @@ public class ArrayBlock extends JdkBlock implements ObjectRule, WiredBlock {
 	}
 
 	@Override
-	public void writeJrank(OutputStream out) throws IOException {
+	public void writeJrank(DataOutputStream out) throws IOException {
 		out.write(JrankConstants.J_ARRAY);
 		classDesc.writeJrank(out);
 		JdkStream.writeEscapedInt(out, size);

@@ -1,5 +1,6 @@
 package org.purplejrank.jdk.block;
 
+import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 
@@ -27,7 +28,7 @@ public class LongstringBlock extends JdkBlock implements ObjectRule, StringRule,
 	}
 
 	@Override
-	public void writeJrank(OutputStream out) throws IOException {
+	public void writeJrank(DataOutputStream out) throws IOException {
 		out.write(JrankConstants.J_STRING);
 		JdkStream.writeUTF(out, s);
 	}

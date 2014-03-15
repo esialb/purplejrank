@@ -1,11 +1,13 @@
 package org.purplejrank.jdk.block;
 
+import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.StreamCorruptedException;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.purplejrank.JrankConstants;
 import org.purplejrank.jdk.Block;
 import org.purplejrank.jdk.JdkBlock;
 import org.purplejrank.jdk.JdkStream;
@@ -50,12 +52,6 @@ public class ClassdescBlock extends JdkBlock implements ObjectRule, Newclassdesc
 			return this;
 		}
 
-		@Override
-		public void writeJrank(OutputStream out) throws IOException {
-			// TODO Auto-generated method stub
-			
-		}
-
 		public byte getTypeCode() {
 			return typeCode;
 		}
@@ -66,6 +62,12 @@ public class ClassdescBlock extends JdkBlock implements ObjectRule, Newclassdesc
 
 		public StringRule getClassName() {
 			return className;
+		}
+
+		@Override
+		public void writeJrank(DataOutputStream out) throws IOException {
+			// TODO Auto-generated method stub
+			
 		}
 		
 	}
@@ -89,12 +91,6 @@ public class ClassdescBlock extends JdkBlock implements ObjectRule, Newclassdesc
 		EndblockdataBlock.class.cast(a);
 		superClassDesc = jdk.readBlock(SuperclassdescRule.class);
 		return this;
-	}
-
-	@Override
-	public void writeJrank(OutputStream out) throws IOException {
-		// TODO Auto-generated method stub
-		
 	}
 
 	@Override
@@ -125,6 +121,18 @@ public class ClassdescBlock extends JdkBlock implements ObjectRule, Newclassdesc
 
 	public List<ContentRule> getClassAnnotation() {
 		return classAnnotation;
+	}
+
+	@Override
+	public void writeJrank(DataOutputStream out) throws IOException {
+		out.write(JrankConstants.J_CLASSDESC);
+		JdkStream.writeUTF(out, className);
+		JdkStream.writeEscapedLong(out, serialVersionUID);
+		out.write(classDescFlags);
+		out.writeShort(fields.size());
+		for(Field f : fields)
+			f.writeJrank(out);
+		superClassDesc.writeJrank(out);
 	}
 
 }

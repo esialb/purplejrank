@@ -1,5 +1,6 @@
 package org.purplejrank.jdk.block;
 
+import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 
@@ -25,7 +26,7 @@ public class BlockdataBlock extends JdkBlock implements BlockdataRule {
 	}
 
 	@Override
-	public void writeJrank(OutputStream out) throws IOException {
+	public void writeJrank(DataOutputStream out) throws IOException {
 		out.write(JrankConstants.J_BLOCK_DATA);
 		JdkStream.writeEscapedInt(out, buf.length);
 		out.write(buf);

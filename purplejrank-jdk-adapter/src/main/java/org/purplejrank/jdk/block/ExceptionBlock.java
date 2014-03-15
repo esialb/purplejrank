@@ -1,5 +1,6 @@
 package org.purplejrank.jdk.block;
 
+import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 
@@ -21,9 +22,8 @@ public class ExceptionBlock extends JdkBlock implements ObjectRule {
 	}
 
 	@Override
-	public void writeJrank(OutputStream out) throws IOException {
-		// TODO Auto-generated method stub
-		
+	public void writeJrank(DataOutputStream out) throws IOException {
+		throw new UnsupportedOperationException();
 	}
 
 }

@@ -1,6 +1,7 @@
 package org.purplejrank.jdk;
 
 import java.io.ByteArrayOutputStream;
+import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
@@ -23,7 +24,7 @@ public class JdkJrankInputStream extends PullInputStream {
 
 	protected void pull(Block b) throws IOException {
 		bout.reset();
-		b.writeJrank(bout);
+		b.writeJrank(new DataOutputStream(bout));
 		bbuf = bout.toByteArray();
 		pos = 0;
 	}

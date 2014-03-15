@@ -1,5 +1,6 @@
 package org.purplejrank.jdk.block;
 
+import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.ObjectStreamConstants;
 import java.io.OutputStream;
@@ -27,12 +28,6 @@ public class ReferenceBlock extends JdkBlock implements ObjectRule, ClassdescRul
 		return this;
 	}
 
-	@Override
-	public void writeJrank(OutputStream out) throws IOException {
-		out.write(JrankConstants.J_REFERENCE);
-		JdkStream.writeEscapedInt(out, handle - ObjectStreamConstants.baseWireHandle);
-	}
-	
 	public WiredBlock getWired() {
 		return jdk.getWiredBlocks().get(handle - ObjectStreamConstants.baseWireHandle);
 	}
@@ -45,6 +40,12 @@ public class ReferenceBlock extends JdkBlock implements ObjectRule, ClassdescRul
 	@Override
 	public ClassdescBlock getSuperClassDesc() {
 		return ((ClassdescRule) getWired()).getSuperClassDesc();
+	}
+
+	@Override
+	public void writeJrank(DataOutputStream out) throws IOException {
+		out.write(JrankConstants.J_REFERENCE);
+		JdkStream.writeEscapedInt(out, handle - ObjectStreamConstants.baseWireHandle);
 	}
 
 }
