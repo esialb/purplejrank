@@ -18,18 +18,54 @@ import org.purplejrank.reflect.FieldCache;
  *
  */
 public class JrankClass {
+	/**
+	 * Is this class a proxy?
+	 */
 	protected boolean proxy;
+	/**
+	 * Proxy interface names
+	 */
 	protected String[] proxyInterfaceNames;
+	/**
+	 * Stream flags
+	 */
 	protected byte flags;
+	/**
+	 * Concrete class name
+	 */
 	protected String name;
+	/**
+	 * Concrete serialVersionUID
+	 */
 	protected long serialVersion;
+	/**
+	 * Concrete field names
+	 */
 	protected String[] fieldNames;
+	/**
+	 * Concrete field types
+	 */
 	protected String[] fieldTypes;
+	/**
+	 * Concrete field classes
+	 */
 	protected Class<?>[] fieldClasses;
+	/**
+	 * Parent stream class
+	 */
 	protected JrankClass parent;
 	
+	/**
+	 * The local class
+	 */
 	protected Class<?> type;
+	/**
+	 * Field cache for faster reflection
+	 */
 	protected FieldCache fieldCache;
+	/**
+	 * Local fields
+	 */
 	protected Field[] fields;
 	
 	JrankClass() {}

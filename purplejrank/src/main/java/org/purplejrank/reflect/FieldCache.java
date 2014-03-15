@@ -14,6 +14,12 @@ public class FieldCache {
 	private Map<String, Field> declared = new HashMap<String, Field>();
 	private Map<String, Field[]> perClass = new HashMap<String, Field[]>();
 	
+	/**
+	 * Get a declared field for a class
+	 * @param cls
+	 * @param name
+	 * @return
+	 */
 	public Field declared(Class<?> cls, String name) {
 		if(cls == null)
 			return null;
@@ -30,6 +36,11 @@ public class FieldCache {
 		return f;
 	}
 
+	/**
+	 * Get all the declared fields for a class
+	 * @param cls
+	 * @return
+	 */
 	public Field[] declared(Class<?> cls) {
 		if(cls == null)
 			return null;

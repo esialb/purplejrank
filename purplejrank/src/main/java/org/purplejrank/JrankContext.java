@@ -1,16 +1,34 @@
 package org.purplejrank;
 
+import java.io.ObjectInputStream.GetField;
+import java.io.ObjectOutputStream.PutField;
+
 /**
  * A serialization or deserialization context.
  * @author robin
  *
  */
 public class JrankContext {
+	/**
+	 * Marker for no stream context
+	 */
 	public static final JrankContext NO_CONTEXT = new JrankContext();
 	
+	/**
+	 * Class descriptor for current stream context
+	 */
 	private JrankClass type;
+	/**
+	 * Current stream object
+	 */
 	private Object object;
+	/**
+	 * {@link PutField} for the current object
+	 */
 	private JrankPutFields putFields;
+	/**
+	 * {@link GetField} for the current object
+	 */
 	private JrankGetFields getFields;
 	
 	private JrankContext() {}

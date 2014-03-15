@@ -11,10 +11,23 @@ import java.nio.channels.ReadableByteChannel;
  *
  */
 public class StreamReadableByteChannel implements ReadableByteChannel {
+	/**
+	 * The stream backing this {@link ReadableByteChannel}
+	 */
 	private InputStream in;
+	/**
+	 * Whether this {@link ReadableByteChannel} is open
+	 */
 	private boolean open = true;
+	/**
+	 * Read buffer for grabbing data from the stream
+	 */
 	private byte[] buf = new byte[8192];
 	
+	/**
+	 * Adapt an {@link InputStream} to a {@link ReadableByteChannel}
+	 * @param in
+	 */
 	public StreamReadableByteChannel(InputStream in) {
 		this.in = in;
 	}

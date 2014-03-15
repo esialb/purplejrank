@@ -15,6 +15,13 @@ public class MethodCache {
 	private Map<String, Method> declared = new HashMap<String, Method>();
 	private Map<String, Method> found = new HashMap<String, Method>();
 	
+	/**
+	 * Get a declared method for a class
+	 * @param cls
+	 * @param name
+	 * @param parameterTypes
+	 * @return
+	 */
 	public Method declared(Class<?> cls, String name, Class<?>... parameterTypes) {
 		if(cls == null)
 			return null;
@@ -31,6 +38,13 @@ public class MethodCache {
 		return m;
 	}
 	
+	/**
+	 * Get a declared method for a class or any superclass
+	 * @param cls
+	 * @param name
+	 * @param parameterTypes
+	 * @return
+	 */
 	public Method find(Class<?> cls, String name, Class<?>... parameterTypes) {
 		if(cls == null)
 			return null;
