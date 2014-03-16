@@ -13,10 +13,19 @@ import java.util.Map;
  */
 public class JrankGetFields extends GetField {
 
+	private boolean done = false;
 	private Map<String, Object> values = new HashMap<String, Object>();
 	
 	void put(String name, Object val) {
 		values.put(name, val);
+	}
+	
+	void setDone(boolean done) {
+		this.done = done;
+	}
+	
+	boolean isDone() {
+		return done;
 	}
 	
 	@Override

@@ -472,9 +472,11 @@ public class PurpleJrankInput extends ObjectInputStream implements ObjectInput {
 
 			case J_ENUM: // read an enum
 				d = readClassDesc();
+				wired.add(null);
+				handle = wired.size() - 1;
 				String name = (String) readObject0(true);
 				obj = Enum.valueOf(d.getType().asSubclass(Enum.class), name);
-				wired.add(obj);
+				wired.set(handle, obj);
 				break;
 
 			case J_CLASS: // read a class
@@ -582,11 +584,10 @@ public class PurpleJrankInput extends ObjectInputStream implements ObjectInput {
 					; // don't read classes that are missing or no longer in the local class hierarchy
 				else if((t.getFlags() & J_SC_WRITE_OBJECT) == J_SC_WRITE_OBJECT || m != null) {
 					restoredClasses.add(t.getType());
+					defaultReadObject(); // defaultReadObject if there was a writeObject but no readObject
 					try {
 						if(m != null) // invoke readObject if there is one
 							m.invoke(obj, this);
-						else
-							defaultReadObject(); // defaultReadObject if there was a writeObject but no readObject
 					} catch(Exception ex) {
 						throw new JrankStreamException(ex);
 					}
@@ -984,11 +985,15 @@ public class PurpleJrankInput extends ObjectInputStream implements ObjectInput {
 		JrankContext ctx = context.peekLast();
 		if(ctx == JrankContext.NO_CONTEXT)
 			throw new NotActiveException();
-		byte b = setBlockMode(false).ensureAvailable(1).get();
+		JrankGetFields fields = ctx.getGetFields();
+		if(fields.isDone())
+			return fields;
+//		byte b = setBlockMode(false).ensureAvailable(1).get();
+		byte b = peek();
 		if(b != J_FIELDS)
-			throw new StreamCorruptedException();
+			return fields;
+		buf.get();
 		JrankClass desc = ctx.getType();
-		JrankGetFields fields = new JrankGetFields();
 		for(int i = 0; i < desc.getFieldNames().length; i++) {
 			String name = desc.getFieldNames()[i];
 			String type = desc.getFieldTypes()[i];
@@ -1008,6 +1013,7 @@ public class PurpleJrankInput extends ObjectInputStream implements ObjectInput {
 		byte wall = buf.get();
 		if(wall != J_WALL)
 			throw new StreamCorruptedException();
+		fields.setDone(true);
 		return fields;
 	}
 
