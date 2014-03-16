@@ -10,21 +10,14 @@ Purple Jrank depends on Objenesis.
 
 ## Where to Get Purple Jrank
 
-Purple Jrank is built and deployed with Apache Maven.  Right now it isn't on Maven Central, so you'll have to add the development repository.
-
-The repository:
-
-    <repository>
-        <id>purplejrank</id>
-        <url>http://repo.purplejrank.org/</url>
-    </repository>
+Purple Jrank is built and deployed with Apache Maven.  Right now it is on Maven Central.
 
 The artifact itself:
 
     <dependency>
         <groupId>org.purplejrank</groupId>
         <artifactId>purplejrank</artifactId>
-        <version>0.1-SNAPSHOT</version>
+        <version>1.1.2</version>
     </dependency>
 
 ## Why use Purple Jrank?
